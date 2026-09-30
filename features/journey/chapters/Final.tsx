@@ -30,7 +30,10 @@ export function Final() {
   const explored = visited.size > 0 ? pts.filter((p) => visited.has(p.id)) : [];
 
   const onProgress = (p: number) => {
-    const full = countryCamera(camera.aspect(), 1.12);
+    const a = camera.aspect();
+    const full = countryCamera(a, 1.12);
+    // on wide screens the country settles to the right, leaving the title its own space
+    if (a > 1.2) full.cx -= full.w * 0.16;
     const z = seg(p, 0.05, 0.86);
     const e = 1 - Math.pow(1 - z, 3);
     camera.jumpTo({ cx: lerp(dhaka[0], full.cx, e), cy: lerp(dhaka[1], full.cy, e), w: lerp(90, full.w, e) });

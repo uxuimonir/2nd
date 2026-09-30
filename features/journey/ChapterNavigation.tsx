@@ -51,12 +51,12 @@ export function ChapterNavigation() {
 
   return (
     <>
-      <nav aria-label="Journey chapters" className="pointer-events-none fixed bottom-6 left-[var(--gutter)] hidden mix-blend-difference text-paper lg:block" style={{ zIndex: "var(--z-chrome)" }}>
-        <div className="flex items-end gap-5">
-          <div className="relative h-[42vh] w-px bg-paper/25">
+      <nav aria-label="Journey chapters" className={cn("pointer-events-none fixed bottom-6 left-3 hidden mix-blend-difference text-paper transition-opacity duration-700 lg:block", activeChapter === "enter" && "opacity-0")} style={{ zIndex: "var(--z-chrome)" }}>
+        <div className="flex items-end gap-2">
+          <div className="relative h-[36vh] w-px bg-paper/25">
             <div ref={bar} className="absolute inset-0 origin-top bg-paper" style={{ transform: "scaleY(0)" }} />
           </div>
-          <ol className="pointer-events-auto flex h-[42vh] flex-col justify-between">
+          <ol className="pointer-events-auto flex h-[36vh] flex-col justify-between">
             {chapters.map((ch, k) => (
               <li key={ch.id}>
                 <button
@@ -68,14 +68,14 @@ export function ChapterNavigation() {
                   data-cursor="explore"
                   data-cursor-label={ch.title}
                 >
-                  <span className={cn("block h-px bg-paper transition-all duration-500", k === i ? "w-6" : "w-2 opacity-40 group-hover:w-4 group-hover:opacity-100")} />
-                  <span className={cn("t-coord whitespace-nowrap transition-opacity duration-300", k === i ? "opacity-100" : "opacity-0 group-hover:opacity-70")}>{ch.title}</span>
+                  <span className={cn("block h-px bg-paper transition-all duration-500", k === i ? "w-5" : "w-2 opacity-40 group-hover:w-4 group-hover:opacity-100")} />
+                  <span className="t-coord whitespace-nowrap bg-ink/80 px-1 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">{ch.title}</span>
                 </button>
               </li>
             ))}
           </ol>
         </div>
-        <p className="t-kicker mt-4" aria-live="polite">
+        <p className="t-kicker mt-4 pl-[calc(var(--gutter)-0.75rem)]" aria-live="polite">
           <span className="tabular-nums">
             {pad2(i + 1)} / {pad2(chapters.length)}
           </span>{" "}

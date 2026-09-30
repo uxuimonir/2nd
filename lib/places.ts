@@ -154,6 +154,7 @@ export function searchPlaces(places: Place[], rivers: River[], query: string, op
       }
     }
     if (p.layer === "history") score -= 1;
+    if (p.id.startsWith("river:")) score += 1;
     if (score > 0 && !seen.has(p.href + p.name)) {
       seen.add(p.href + p.name);
       results.push({ ...p, score });

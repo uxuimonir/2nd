@@ -73,11 +73,11 @@ function useMangroves(seed: number, count: number, w: number, h: number) {
         trunks.push({ d: `M${r(bx)} ${r(ground - 30)} C ${r(bx + (rnd() - 0.5) * 40)} ${r(ground - 160)}, ${r(tx + (rnd() - 0.5) * 60)} ${r(ty + 90)}, ${r(tx)} ${r(ty)}`, w: r(2.5 + rnd() * 4) });
       }
       // a spreading crown made of many small leaf masses — a textured, irregular edge
-      const clusters = 22 + Math.floor(rnd() * 16);
+      const clusters = 70 + Math.floor(rnd() * 40);
       for (let k = 0; k < clusters; k++) {
         const a = rnd() * Math.PI * 2;
         const rr = Math.sqrt(rnd());
-        leaves.push({ cx: r(x + Math.cos(a) * spread * rr), cy: r(top + 40 + Math.sin(a) * spread * 0.32 * rr), r: r(12 + rnd() * 30) });
+        leaves.push({ cx: r(x + Math.cos(a) * spread * rr), cy: r(top + 40 + Math.sin(a) * spread * 0.42 * rr + (rnd() - 0.5) * 30), r: r(5 + rnd() * 15) });
       }
       // arching prop roots
       const props = 5 + Math.floor(rnd() * 5);

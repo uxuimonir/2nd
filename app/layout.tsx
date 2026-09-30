@@ -3,6 +3,7 @@ import { Hind_Siliguri, IBM_Plex_Mono, Instrument_Serif, Schibsted_Grotesk, Tiro
 import { Cursor } from "@/components/cursor/Cursor";
 import { LOADER_SCRIPT, LoadingScreen } from "@/components/chrome/LoadingScreen";
 import { TopBar } from "@/components/chrome/TopBar";
+import { SiteFooter } from "@/components/page/SiteFooter";
 import { PlaceReveal } from "@/components/place/PlaceReveal";
 import { ExperienceProvider } from "@/features/experience/ExperienceProvider";
 import { buildPlaces } from "@/lib/places";
@@ -70,6 +71,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <ExperienceProvider places={places}>
           <TopBar />
           {children}
+          <SiteFooter />
           <PlaceReveal />
           <Cursor />
           <LoadingScreen />

@@ -46,7 +46,7 @@ function useMapTexture() {
     g.lineCap = "round";
     g.lineJoin = "round";
     for (const r of GEO.rivers) {
-      g.lineWidth = r.id === "padma" || r.id === "jamuna" || r.id === "meghna" ? 3.4 : 2.2;
+      g.lineWidth = r.id === "padma" || r.id === "jamuna" || r.id === "meghna" ? 5 : 3.2;
       g.stroke(new Path2D(r.path));
     }
     g.strokeStyle = "rgb(0,0,255)";
@@ -136,6 +136,9 @@ const fragment = /* glsl */ `
     col += vec3(0.9, 0.55, 0.25) * uLife * 0.05 * (1.0 - vH) * land;
 
     float alpha = sea ? 0.0 : (land > 0.5 ? 1.0 : mix(0.35, 0.75, uElev));
+    // soften the plane's rectangular edge so the neighbours dissolve into the night
+    float edge = smoothstep(0.0, 0.12, vUv.x) * smoothstep(1.0, 0.88, vUv.x) * smoothstep(0.0, 0.1, vUv.y) * smoothstep(1.0, 0.9, vUv.y);
+    if (land < 0.5) alpha *= edge;
     gl_FragColor = vec4(col, alpha);
   }
 `;
@@ -175,7 +178,7 @@ function Terrain({ progress, segments }: { progress: MutableRefObject<number>; s
 
   useFrame((_, dt) => {
     const s = STAGES(progress.current);
-    const u = uniforms;
+    const u = (mat.current?.uniforms ?? uniforms) as typeof uniforms;
     u.uTime.value += dt;
     // ease uniforms toward targets for silky scrubbing
     u.uRivers.value += (s.rivers - u.uRivers.value) * 0.12;
