@@ -1,0 +1,255 @@
+// Digital Bangladesh — content database.
+// The typed files in /content are the editorial source; `npm run db:seed` loads them here.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MediaKind {
+  photo
+  archival
+  satellite
+  document
+}
+
+/// A photograph or document on Wikimedia Commons (or any future media host).
+model Media {
+  id        String    @id
+  file      String
+  alt       String
+  caption   String?
+  kind      MediaKind @default(photo)
+  focal     String?
+  maxWidth  Int?
+  createdAt DateTime  @default(now())
+}
+
+model Region {
+  slug        String   @id
+  name        String
+  nameBn      String
+  summary     String
+  description String[]
+  character   String[]
+  established String?
+  mediaIds    String[]
+  capitalSlug String
+
+  cities       City[]
+  heritage     HeritageSite[]
+  nature       NatureSpot[]
+  food         Food[]
+  destinations Destination[]
+  people       PersonStory[]
+  culture      CultureItem[]
+}
+
+model City {
+  slug        String   @id
+  name        String
+  nameBn      String
+  tagline     String
+  summary     String
+  description String[]
+  landmarks   String[]
+  facts       Json
+  lon         Float
+  lat         Float
+  ambient     String
+  mediaIds    String[]
+
+  regionSlug String
+  region     Region @relation(fields: [regionSlug], references: [slug])
+
+  rivers   River[]        @relation("CityRivers")
+  heritage HeritageSite[] @relation("CityHeritage")
+  nature   NatureSpot[]   @relation("CityNature")
+  food     Food[]         @relation("CityFood")
+
+  @@index([regionSlug])
+}
+
+model River {
+  slug        String   @id
+  geoId       String
+  name        String
+  nameBn      String
+  color       String
+  course      String
+  summary     String
+  description String[]
+  mediaIds    String[]
+
+  stops  RiverStop[]
+  cities City[]      @relation("CityRivers")
+}
+
+model RiverStop {
+  id        Int     @id @default(autoincrement())
+  position  Int
+  label     String
+  note      String
+  lon       Float
+  lat       Float
+  mediaId   String?
+  refKind   String?
+  refSlug   String?
+  riverSlug String
+  river     River   @relation(fields: [riverSlug], references: [slug], onDelete: Cascade)
+
+  @@unique([riverSlug, position])
+}
+
+model HeritageSite {
+  slug         String   @id
+  name         String
+  nameBn       String
+  summary      String
+  description  String[]
+  period       String
+  architecture String
+  recognition  String?
+  lon          Float
+  lat          Float
+  mediaIds     String[]
+
+  regionSlug String
+  region     Region          @relation(fields: [regionSlug], references: [slug])
+  cities     City[]          @relation("CityHeritage")
+  timeline   TimelineEvent[]
+
+  @@index([regionSlug])
+}
+
+model NatureSpot {
+  slug        String   @id
+  name        String
+  nameBn      String
+  summary     String
+  description String[]
+  ecosystem   String
+  recognition String?
+  ambient     String
+  lon         Float
+  lat         Float
+  mediaIds    String[]
+
+  regionSlug String
+  region     Region @relation(fields: [regionSlug], references: [slug])
+  cities     City[] @relation("CityNature")
+
+  @@index([regionSlug])
+}
+
+model Food {
+  slug        String   @id
+  name        String
+  nameBn      String
+  summary     String
+  description String[]
+  origin      String
+  season      String?
+  category    String
+  lon         Float
+  lat         Float
+  mediaIds    String[]
+
+  regionSlug String
+  region     Region @relation(fields: [regionSlug], references: [slug])
+  cities     City[] @relation("CityFood")
+
+  @@index([regionSlug])
+}
+
+model CultureItem {
+  slug        String   @id
+  name        String
+  nameBn      String
+  category    String
+  summary     String
+  description String[]
+  recognition String?
+  lon         Float?
+  lat         Float?
+  mediaIds    String[]
+
+  regionSlug String?
+  region     Region? @relation(fields: [regionSlug], references: [slug])
+}
+
+model TimelineEvent {
+  slug      String @id
+  year      Int
+  yearLabel String
+  era       String
+  title     String
+  place     String
+  event     String
+  context   String
+  lon       Float
+  lat       Float
+  mediaId   String
+  type      String
+  palette   Json
+  refKind   String?
+  refSlug   String?
+
+  heritageSlug String?
+  heritage     HeritageSite? @relation(fields: [heritageSlug], references: [slug])
+
+  @@index([year])
+}
+
+model PersonStory {
+  slug    String  @id
+  role    String
+  roleBn  String
+  place   String
+  theme   String
+  summary String
+  story   String
+  lon     Float
+  lat     Float
+  mediaId String
+  editorial Boolean @default(true)
+
+  regionSlug String
+  region     Region @relation(fields: [regionSlug], references: [slug])
+}
+
+model Destination {
+  slug        String   @id
+  name        String
+  nameBn      String
+  summary     String
+  description String[]
+  layer       String
+  category    String
+  opened      String?
+  lon         Float
+  lat         Float
+  mediaIds    String[]
+
+  regionSlug String
+  region     Region @relation(fields: [regionSlug], references: [slug])
+}
+
+model Story {
+  slug     String   @id
+  chapter  String
+  title    String
+  body     String[]
+  mediaIds String[]
+  refs     Json
+}
+
+model Gallery {
+  slug     String   @id
+  title    String
+  mediaIds String[]
+}
