@@ -100,7 +100,7 @@ export function SearchPanel({ initialQuery = "", autoFocus = true, onNavigate }:
           aria-activedescendant={current ? `${listId}-${active}` : undefined}
           autoComplete="off"
           placeholder="Where to?"
-          className="t-display mt-3 w-full border-b border-white/25 bg-transparent pb-3 text-[clamp(2.2rem,6vw,4.8rem)] leading-none outline-none placeholder:text-white/25 focus:border-sand"
+          className="t-display mt-3 w-full border-b border-white/25 bg-transparent pb-3 focus-visible:outline-none text-[clamp(2.2rem,6vw,4.8rem)] leading-none outline-none placeholder:text-white/25 focus:border-sand"
         />
         <div role="group" aria-label="Filter" className="mt-4 flex flex-wrap gap-2">
           {FILTERS.map((f) => (

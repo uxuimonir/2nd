@@ -59,7 +59,8 @@ export function Opening() {
       if (reduced) {
         tl.progress(1);
         gsap.set([outline, ...rivers], { strokeDashoffset: 0 });
-        gsap.set(q("[data-o-fade], [data-o-city], [data-o-letter], [data-o-photo]"), { opacity: 1, yPercent: 0 });
+        gsap.set(q("[data-o-fade], [data-o-city], [data-o-letter]"), { opacity: 1, yPercent: 0 });
+        gsap.set(q("[data-o-photo]"), { opacity: 0.42 });
         gsap.set(q("[data-o-light]"), { opacity: 0 });
         return;
       }
@@ -162,7 +163,7 @@ export function Opening() {
         <div data-o-type className="gutter relative flex h-full flex-col justify-end pb-[12svh] md:justify-center md:pb-0">
           <h1 id="enter-title" className="t-display relative" aria-label="Digital Bangladesh">
             {[title1, title2].map((word, wi) => (
-              <span key={word} aria-hidden className="block overflow-hidden leading-[0.86]" style={{ fontSize: wi === 0 ? "var(--step-5)" : "var(--step-6)" }}>
+              <span key={word} aria-hidden className="block overflow-hidden leading-[0.86]" style={{ fontSize: wi === 0 ? "var(--step-5)" : "clamp(3rem, 0.8rem + 13vw, 17rem)" }}>
                 {word.split("").map((ch, i) => (
                   <span key={i} data-o-letter className="inline-block will-change-transform">
                     {ch}

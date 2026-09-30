@@ -47,13 +47,12 @@ export function LoadingScreen() {
       try {
         sessionStorage.setItem(KEY, "1");
       } catch {}
-      gsap.to(el, {
-        opacity: 0,
-        duration: reduced ? 0 : 1,
-        ease: "power2.inOut",
-        onStart: () => window.dispatchEvent(new Event("db:loaded")),
-        onComplete: () => setDone(true),
-      });
+      window.dispatchEvent(new Event("db:loaded"));
+      if (reduced) {
+        setDone(true);
+        return;
+      }
+      gsap.to(el, { opacity: 0, duration: 1, ease: "power2.inOut", onComplete: () => setDone(true) });
     });
     return () => {
       cancelled = true;
