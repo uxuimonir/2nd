@@ -25,11 +25,11 @@ const SERIF = '"Instrument Serif", "Times New Roman", serif'
 const EASE = [0.16, 1, 0.3, 1] as const
 const IMG = "https://raw.githubusercontent.com/uxuimonir/2nd/83430dfd2a7c2050799516849c47d8f2be688dc7/noire/public/media/"
 
-function useWidth(ref: React.RefObject<HTMLElement>) {
+function useWidth(ref: React.RefObject<HTMLElement | null>) {
     const [w, setW] = useState(1440)
     useEffect(() => {
         if (!ref.current || typeof ResizeObserver === "undefined") return
-        const ro = new ResizeObserver((e) => startTransition(() => setW(e[0].contentRect.width)))
+        const ro = new ResizeObserver((e) => startTransition(() => setW((e[0].target as HTMLElement).getBoundingClientRect().width)))
         ro.observe(ref.current)
         return () => ro.disconnect()
     }, [])

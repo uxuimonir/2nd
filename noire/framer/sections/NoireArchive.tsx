@@ -32,11 +32,11 @@ const DEFAULT_ITEMS: Fragment[] = [
     { title: "Stone sample, for scale", kind: "Material study", year: "2026", note: "Limestone offcut from the Halde plinth maker.", link: "/work/quiet-matter", linkLabel: "Quiet Matter", image: { src: IMG + "a-12.webp" } },
 ]
 
-function useWidth(ref: React.RefObject<HTMLElement>) {
+function useWidth(ref: React.RefObject<HTMLElement | null>) {
     const [w, setW] = useState(1440)
     useEffect(() => {
         if (!ref.current || typeof ResizeObserver === "undefined") return
-        const ro = new ResizeObserver((e) => startTransition(() => setW(e[0].contentRect.width)))
+        const ro = new ResizeObserver((e) => startTransition(() => setW((e[0].target as HTMLElement).getBoundingClientRect().width)))
         ro.observe(ref.current)
         return () => ro.disconnect()
     }, [])

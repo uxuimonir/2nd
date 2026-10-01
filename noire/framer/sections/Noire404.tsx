@@ -31,7 +31,7 @@ export default function Noire404(props: Noire404Props) {
     const y = useSpring(my, { stiffness: 60, damping: 20 })
     useEffect(() => {
         if (!root.current || typeof ResizeObserver === "undefined") return
-        const ro = new ResizeObserver((e) => startTransition(() => setW(e[0].contentRect.width)))
+        const ro = new ResizeObserver((e) => startTransition(() => setW((e[0].target as HTMLElement).getBoundingClientRect().width)))
         ro.observe(root.current)
         return () => ro.disconnect()
     }, [])

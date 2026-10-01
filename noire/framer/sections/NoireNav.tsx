@@ -25,11 +25,11 @@ const SANS = '"Inter Tight", "Helvetica Neue", Arial, sans-serif'
 const SERIF = '"Instrument Serif", "Times New Roman", serif'
 const EASE = [0.16, 1, 0.3, 1] as const
 
-function useWidth(ref: React.RefObject<HTMLElement>) {
+function useWidth(ref: React.RefObject<HTMLElement | null>) {
     const [w, setW] = useState(1200)
     useEffect(() => {
         if (!ref.current || typeof ResizeObserver === "undefined") return
-        const ro = new ResizeObserver((e) => startTransition(() => setW(e[0].contentRect.width)))
+        const ro = new ResizeObserver((e) => startTransition(() => setW((e[0].target as HTMLElement).getBoundingClientRect().width)))
         ro.observe(ref.current)
         return () => ro.disconnect()
     }, [])

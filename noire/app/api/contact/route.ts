@@ -18,6 +18,8 @@ export async function POST(request: Request) {
     return Response.json({ ok: true });
   }
 
+  // The Framer contact section posts the project type as "type".
+  if (typeof body.projectType !== "string" && typeof body.type === "string") body.projectType = body.type;
   const data = Object.fromEntries(
     (Object.keys(emptyEnquiry) as (keyof Enquiry)[]).map((k) => [
       k,

@@ -25,11 +25,11 @@ const DEFAULT_STORIES: Story[] = [
     { title: "Captions are design, too", category: "Notes", date: "21 Mar 2026", excerpt: "A caption decides how long someone looks at an image. Here is how we write and set them.", link: "/journal/captions-are-design", image: { src: IMG + "j-captions-are-design.webp" } },
 ]
 
-function useWidth(ref: React.RefObject<HTMLElement>) {
+function useWidth(ref: React.RefObject<HTMLElement | null>) {
     const [w, setW] = useState(1440)
     useEffect(() => {
         if (!ref.current || typeof ResizeObserver === "undefined") return
-        const ro = new ResizeObserver((e) => startTransition(() => setW(e[0].contentRect.width)))
+        const ro = new ResizeObserver((e) => startTransition(() => setW((e[0].target as HTMLElement).getBoundingClientRect().width)))
         ro.observe(ref.current)
         return () => ro.disconnect()
     }, [])

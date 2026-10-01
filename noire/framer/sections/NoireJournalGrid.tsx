@@ -24,11 +24,11 @@ const DEFAULT_STORIES: Story[] = [
     { title: "A studio in January", category: "Studio", date: "18 Jan 2025", read: "1 min", excerpt: "We close for two weeks every winter. This is what we do instead of working.", link: "/journal/a-studio-in-january", image: { src: IMG + "j-a-studio-in-january.webp" } },
 ]
 
-function useWidth(ref: React.RefObject<HTMLElement>) {
+function useWidth(ref: React.RefObject<HTMLElement | null>) {
     const [w, setW] = useState(1440)
     useEffect(() => {
         if (!ref.current || typeof ResizeObserver === "undefined") return
-        const ro = new ResizeObserver((e) => startTransition(() => setW(e[0].contentRect.width)))
+        const ro = new ResizeObserver((e) => startTransition(() => setW((e[0].target as HTMLElement).getBoundingClientRect().width)))
         ro.observe(ref.current)
         return () => ro.disconnect()
     }, [])

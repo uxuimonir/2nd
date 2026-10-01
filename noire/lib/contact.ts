@@ -1,4 +1,4 @@
-import { budgetRanges, projectTypes, timelines } from "@/content/site";
+import { budgetRanges, projectTypes } from "@/content/site";
 
 /** Shared contact-form schema — the same rules run in the browser and on the server. */
 export type Enquiry = {
@@ -50,8 +50,7 @@ export function validateField(field: keyof Enquiry, value: string): string | und
         return "Choose one of the listed ranges.";
       return;
     case "timeline":
-      if (v && !(timelines as readonly string[]).includes(v))
-        return "Choose one of the listed timelines.";
+      if (v.length > 120) return "Please keep the timeline under 120 characters.";
       return;
     case "message":
       if (v.length < 20) return "A few sentences help us reply properly — at least 20 characters.";

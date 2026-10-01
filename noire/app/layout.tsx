@@ -1,14 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Instrument_Serif, Inter_Tight } from "next/font/google";
-import { Footer } from "@/components/chrome/Footer";
-import { Header } from "@/components/chrome/Header";
-import { RevealObserver } from "@/components/motion/RevealObserver";
+import { SiteNav } from "@/components/chrome/SiteNav";
+import { SiteFooter } from "@/components/chrome/SiteFooter";
 import { site } from "@/content/site";
 import "@/styles/tokens.css";
 import "@/styles/base.css";
-import "@/styles/components.css";
-import "@/styles/sections.css";
-import "@/styles/motion.css";
 
 /* Display face + utility face — the only two families in the system. */
 const display = Instrument_Serif({
@@ -44,29 +40,22 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f5f2ec",
+  themeColor: "#11110f",
   colorScheme: "light",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${utility.variable}`} suppressHydrationWarning>
-      <head>
-        {/* Reveal states only apply when JS runs — content is never hidden without it. */}
-        <script
-          dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }}
-        />
-      </head>
+    <html lang="en" className={`${display.variable} ${utility.variable}`}>
       <body>
         <a className="skip-link" href="#main">
           Skip to content
         </a>
-        <Header />
+        <SiteNav />
         <main id="main" tabIndex={-1}>
           {children}
         </main>
-        <Footer />
-        <RevealObserver />
+        <SiteFooter />
       </body>
     </html>
   );

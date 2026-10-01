@@ -31,11 +31,11 @@ const DEFAULT_PROJECTS: Project[] = [
     { title: "Lowlight", client: "Atelier Ombra", discipline: "Art direction & campaign", year: "2024", thesis: "Photographing lamps by the light they give, not the way they look.", link: "/work/lowlight", image: { src: IMG + "p-lowlight-hero.webp" }, tone: "#15130F" },
 ]
 
-function useWidth(ref: React.RefObject<HTMLElement>) {
+function useWidth(ref: React.RefObject<HTMLElement | null>) {
     const [w, setW] = useState(1440)
     useEffect(() => {
         if (!ref.current || typeof ResizeObserver === "undefined") return
-        const ro = new ResizeObserver((e) => startTransition(() => setW(e[0].contentRect.width)))
+        const ro = new ResizeObserver((e) => startTransition(() => setW((e[0].target as HTMLElement).getBoundingClientRect().width)))
         ro.observe(ref.current)
         return () => ro.disconnect()
     }, [])

@@ -43,11 +43,11 @@ We now write a short list at the start of each project: the things we will not d
 
 Restraint is not free. Quiet work is harder to sell in a pitch, harder to photograph, and easier to dismiss as unfinished. When it works, though, the result tends to last. Things that do less tend to age more slowly.`
 
-function useWidth(ref: React.RefObject<HTMLElement>) {
+function useWidth(ref: React.RefObject<HTMLElement | null>) {
     const [w, setW] = useState(1440)
     useEffect(() => {
         if (!ref.current || typeof ResizeObserver === "undefined") return
-        const ro = new ResizeObserver((e) => startTransition(() => setW(e[0].contentRect.width)))
+        const ro = new ResizeObserver((e) => startTransition(() => setW((e[0].target as HTMLElement).getBoundingClientRect().width)))
         ro.observe(ref.current)
         return () => ro.disconnect()
     }, [])
@@ -88,7 +88,7 @@ export default function NoireArticle(props: NoireArticleProps) {
 
     return (
         <article ref={root} style={{ ...style, position: "relative", width: "100%", background: "#F5F2EC", color: "#11110F" }}>
-            <motion.div aria-hidden="true" style={{ position: "sticky", top: 0, zIndex: 3, height: 3, background: "#D9573F", transformOrigin: "left", scaleX: progress }} />
+            <motion.div aria-hidden="true" style={{ position: "sticky", top: 72, zIndex: 3, height: 3, background: "#D9573F", transformOrigin: "left", scaleX: progress }} />
             <header style={{ padding: `${compact ? 130 : 180}px ${pad}px ${compact ? 40 : 64}px`, maxWidth: 1240 }}>
                 <p style={{ margin: "0 0 28px", display: "flex", flexWrap: "wrap", gap: "8px 18px", fontFamily: SANS, fontSize: 12, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", color: "#6D6A64" }}>
                     <span style={{ color: "#D9573F" }}>{category}</span>
