@@ -25,3 +25,21 @@ Set the NoireNav instance to **Position: Fixed, top 0, width 100%** on every pag
 Images default to the demo library on GitHub; replace them via each component's
 image controls (Framer uploads them). Contact: set *Form endpoint* to a form
 service URL; without one the form opens the visitor's mail app prefilled.
+
+## Page components (`framer/pages`)
+
+Inner pages with lots of content (About, Services, Journal, Contact, Studio,
+Recognition, Colophon, Privacy/Terms, every project and every article) are also
+available as one component per page, generated from the Next.js pages so both
+builds show exactly the same content:
+
+```bash
+npm run framer:pages   # writes framer/pages/*.tsx
+```
+
+Each file imports the section code files by their Framer module URL, listed in
+`framer/modules.json` (copy a URL with *Copy Import* in Framer if you recreate a
+section). Multi-page files (`NoireProjectPage`, `NoireArticlePage`,
+`NoireLegalPage`) have a **Page** property: one instance per Framer page, e.g.
+`/work/tidewater` → Page `tidewater`. Content can be edited in the generated
+props or, to keep both builds in sync, in `content/*.ts` and regenerated.
