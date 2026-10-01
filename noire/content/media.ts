@@ -385,6 +385,17 @@ const rows: Row[] = [
   ["a-10", "paper", 10, "P", "Paper stock samples fanned out."],
   ["a-11", "sketch", 5, "P", "A page of handwritten notes with arrows and boxes."],
   ["a-12", "stone", 10, "S", "A small stone sample next to a pencil for scale."],
+  // Page heroes (full-height, cinematic — every inner page opens like Home)
+  ["hero-work", "stone", 5, "W", "Rounded stone forms on low plinths across a quiet gallery floor.", "50% 60%"],
+  ["hero-about", "light", 0, "W", "A pendant lamp casting a soft cone of warm light onto a dark table.", "50% 45%"],
+  ["hero-services", "light", 3, "W", "A row of glowing lamps in different shapes in a dark room.", "50% 55%"],
+  ["hero-journal", "paper", 1, "W", "A stack of cloth-bound books in muted colours.", "50% 50%"],
+  ["hero-contact", "light", 2, "W", "A glowing opal globe lamp on a dark floor.", "50% 50%"],
+  ["hero-studio", "clay", 1, "W", "A row of handmade vessels in earthy glazes on a wooden shelf.", "50% 60%"],
+  ["hero-recognition", "light", 1, "W", "Three soft beams of light washing a dark wall.", "50% 50%"],
+  ["hero-colophon", "riso", 2, "W", "A halftone risograph gradient in yellow and blue.", "50% 50%"],
+  ["hero-privacy", "linen", 4, "W", "A single typed sheet resting on linen.", "50% 50%"],
+  ["hero-terms", "concrete", 1, "W", "A stair-shaped shadow falling across a concrete wall.", "60% 50%"],
 ];
 
 export const media: Record<string, MediaAsset> = Object.fromEntries(
