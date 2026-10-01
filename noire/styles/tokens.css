@@ -1,0 +1,145 @@
+/* ==========================================================================
+   NOIRÉ 2 — Design tokens
+   One source of truth for colour, type, space, grid, radius and motion.
+   Framer mapping: each token below maps to a Color Style / Text Style /
+   documented value (see README → "Framer conversion").
+   Breakpoints (fixed, used in media queries):
+     Mobile   0 – 767px     4 columns
+     Tablet   768 – 1199px  8 columns
+     Desktop  1200px +      12 columns
+   ========================================================================== */
+
+:root {
+  /* Colour / Background */
+  --color-bg: #f5f2ec;            /* Color/Background/Primary */
+  --color-bg-inverse: #11110f;    /* Color/Background/Inverse */
+  --color-surface: #eae6de;       /* Color/Surface */
+  /* Colour / Text */
+  --color-text: #11110f;          /* Color/Text/Primary */
+  --color-text-inverse: #f7f5f0;  /* Color/Text/Inverse */
+  --color-muted: #6d6a64;         /* Color/Text/Muted — 4.8:1 on bg */
+  --color-muted-inverse: #a5a199; /* Color/Text/Muted (inverse) — 7:1 on inverse */
+  /* Colour / Line & accent */
+  --color-line: #d3cfc6;          /* Color/Line/Subtle */
+  --color-line-strong: #a9a49a;
+  --color-line-inverse: #34322d;
+  --color-accent: #d9573f;        /* Color/Accent/Primary — 5–10% of surface, large or graphic use */
+  --color-accent-soft: #f0c8bf;   /* Color/Accent/Soft */
+  --color-accent-ink: #b23d27;    /* Accent for small text on light bg (AA) */
+  --color-focus: #11110f;         /* Color/Focus */
+  --color-success: #2f6b4f;
+  --color-error: #a8321f;
+
+  /* Typography — families */
+  --font-display: var(--font-instrument), "Times New Roman", serif;
+  --font-utility: var(--font-inter-tight), "Helvetica Neue", Arial, sans-serif;
+
+  /* Typography — fluid scale (min @ 375px → max @ 1440px+) */
+  --text-display-xl: clamp(3rem, 1.2rem + 8.4vw, 9.25rem);   /* 48 → 148 */
+  --text-display-l: clamp(2.5rem, 1.6rem + 4.6vw, 6.5rem);   /* 40 → 104 */
+  --text-h1: clamp(2.125rem, 1.5rem + 2.6vw, 4.5rem);        /* 34 → 72 */
+  --text-h2: clamp(1.625rem, 1.25rem + 1.3vw, 3rem);         /* 26 → 48 */
+  --text-h3: clamp(1.25rem, 1.12rem + 0.5vw, 1.625rem);      /* 20 → 26 */
+  --text-body-l: clamp(1rem, 0.93rem + 0.35vw, 1.375rem);    /* 16 → 22 */
+  --text-body: clamp(0.9375rem, 0.9rem + 0.15vw, 1.125rem);  /* 15 → 18 */
+  --text-meta: clamp(0.6875rem, 0.66rem + 0.12vw, 0.8125rem);/* 11 → 13 */
+
+  --leading-display: 0.94;
+  --leading-heading: 1.06;
+  --leading-body: 1.55;
+  --tracking-display: -0.025em;
+  --tracking-heading: -0.015em;
+  --tracking-meta: 0.06em;
+
+  /* Spacing — 4px base, primary rhythm */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+  --space-40: 160px;
+  --space-48: 192px;
+  --section-y: clamp(80px, 48px + 6vw, 192px);
+  --section-y-tight: clamp(48px, 32px + 3.5vw, 96px);
+
+  /* Grid */
+  --page-max: 1440px;
+  --page-x: clamp(16px, 4vw, 64px);
+  --gutter: 16px;
+  --columns: 4;
+  --header-h: 64px;
+
+  /* Radius */
+  --radius-0: 0;
+  --radius-s: 4px;
+  --radius-m: 10px;
+  --radius-l: 18px;
+  --radius-pill: 999px;
+
+  /* Image ratios */
+  --ratio-landscape: 3 / 2;
+  --ratio-portrait: 4 / 5;
+  --ratio-tall: 3 / 4;
+  --ratio-square: 1 / 1;
+  --ratio-wide: 16 / 9;
+  --ratio-cinema: 21 / 9;
+
+  /* Motion — "quietly cinematic" */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);     /* text, sections */
+  --ease-card: cubic-bezier(0.22, 0.61, 0.36, 1);/* image reveals */
+  --ease-page: cubic-bezier(0.76, 0, 0.24, 1);   /* page transitions */
+  --ease-micro: ease-out;
+  --dur-micro: 220ms;   /* 180–260 */
+  --dur-image: 480ms;   /* 350–550 */
+  --dur-text: 700ms;    /* 500–800 */
+  --dur-section: 900ms; /* 700–1000 */
+  --dur-page: 560ms;    /* 450–750 */
+  --reveal-y: 18px;     /* 12–24 */
+}
+
+@media (min-width: 768px) {
+  :root {
+    --gutter: 20px;
+    --columns: 8;
+    --header-h: 68px;
+  }
+}
+
+@media (min-width: 1200px) {
+  :root {
+    --gutter: 24px;
+    --columns: 12;
+    --header-h: 72px;
+  }
+}
+
+/* Reduced motion: shorter, positionless transitions. Content never hidden. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-image: 1ms;
+    --dur-text: 200ms;
+    --dur-section: 200ms;
+    --dur-page: 1ms;
+    --reveal-y: 0px;
+  }
+}
+
+/* Inverse theme — apply to any section, the footer or the menu overlay. */
+.theme-inverse {
+  --color-bg: #11110f;
+  --color-surface: #1b1a17;
+  --color-text: #f7f5f0;
+  --color-muted: var(--color-muted-inverse);
+  --color-line: var(--color-line-inverse);
+  --color-line-strong: #5a5750;
+  --color-focus: #f7f5f0;
+  --color-accent-ink: #ec7a62;
+  background: var(--color-bg);
+  color: var(--color-text);
+}

@@ -1,3 +1,7 @@
+> **Also in this repository:** [`noire/`](noire/README.md) — **NOIRÉ 2**, an editorial, motion-led
+> creative portfolio template (Next.js, 12 pages + 404, CMS-style content, Framer conversion map).
+> Run it with `cd noire && npm install && npm run dev`.
+
 # Digital Bangladesh
 
 **A living journey through land, water, history & people.**
