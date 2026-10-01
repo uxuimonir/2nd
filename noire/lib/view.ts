@@ -54,3 +54,9 @@ export function articleBody(a: Article) {
     })
     .join("\n\n");
 }
+
+/** Props for a cinematic (dark, full-height, image-led) NoirePageHero. */
+export function hero(id: string) {
+  const m = getMedia(id);
+  return { image: { src: m.src, alt: m.alt }, imagePosition: m.focal ?? "50% 50%", imageRatio: 1.78, dark: true };
+}

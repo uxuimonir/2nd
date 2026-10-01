@@ -27,7 +27,7 @@ interface NoireBlocksProps {
 const SANS = '"Inter Tight", "Helvetica Neue", Arial, sans-serif'
 const SERIF = '"Instrument Serif", "Times New Roman", serif'
 const EASE = [0.16, 1, 0.3, 1] as const
-const IMG = "https://raw.githubusercontent.com/uxuimonir/2nd/83430dfd2a7c2050799516849c47d8f2be688dc7/noire/public/media/"
+const IMG = "https://raw.githubusercontent.com/uxuimonir/2nd/dfc52ae6763df67bd2e5dc8f8b76bac7d8ec60f1/noire/public/media/"
 
 const DEFAULT_ITEMS: Item[] = [
     { a: "01", b: "Material first", c: "Start from what the thing is made of — paper, clay, stone, light — and let the system grow from there.", link: "" },

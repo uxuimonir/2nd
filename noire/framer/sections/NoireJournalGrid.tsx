@@ -13,7 +13,7 @@ interface NoireJournalGridProps {
 
 const SANS = '"Inter Tight", "Helvetica Neue", Arial, sans-serif'
 const SERIF = '"Instrument Serif", "Times New Roman", serif'
-const IMG = "https://raw.githubusercontent.com/uxuimonir/2nd/83430dfd2a7c2050799516849c47d8f2be688dc7/noire/public/media/"
+const IMG = "https://raw.githubusercontent.com/uxuimonir/2nd/dfc52ae6763df67bd2e5dc8f8b76bac7d8ec60f1/noire/public/media/"
 
 const DEFAULT_STORIES: Story[] = [
     { title: "On restraint, and what it costs", category: "Essay", date: "14 Aug 2026", read: "3 min", excerpt: "Restraint is usually described as taking things away. In practice it is mostly about deciding, early, what you will refuse to add later.", link: "/journal/on-restraint", image: { src: IMG + "j-on-restraint.webp" } },

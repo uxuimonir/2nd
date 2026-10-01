@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { NoireArticle } from "@/components/sections";
+import { img } from "@/lib/view";
 import { site } from "@/content/site";
 
 export const metadata: Metadata = {
@@ -33,5 +34,5 @@ NOIRÉ 2 v${site.version}. Every section is a self-contained Framer code compone
 ${site.legalName}, its people, clients, projects, awards and figures are fictional.`;
 
 export default function ColophonPage() {
-  return <NoireArticle category="Colophon" title="How this site is made." date="" author="" excerpt="A short record of the decisions behind the design — for anyone curious, or anyone customising it." body={BODY} backLabel="Back home" backLink="/" prevLabel="" prevLink="" nextLabel="Privacy" nextLink="/legal/privacy" />;
+  return <NoireArticle cover={img("hero-colophon")} category="Colophon" title="How this site is made." date="" author="" excerpt="A short record of the decisions behind the design — for anyone curious, or anyone customising it." body={BODY} backLabel="Back home" backLink="/" prevLabel="" prevLink="" nextLabel="Privacy" nextLink="/legal/privacy" />;
 }

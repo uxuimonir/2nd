@@ -17,7 +17,7 @@ import * as Sections from "../components/sections";
 import { getArticles, getProjects } from "../lib/cms";
 import { legalPages } from "../content/studio";
 
-const MEDIA = "https://raw.githubusercontent.com/uxuimonir/2nd/83430dfd2a7c2050799516849c47d8f2be688dc7/noire/public/media/";
+const MEDIA = "https://raw.githubusercontent.com/uxuimonir/2nd/dfc52ae6763df67bd2e5dc8f8b76bac7d8ec60f1/noire/public/media/";
 const OUT = path.join(import.meta.dirname, "..", "framer", "pages");
 /** Module URLs of the section code files in the Framer project (framer/modules.json). */
 const MODULES: Record<string, string> = JSON.parse(readFileSync(path.join(import.meta.dirname, "..", "framer", "modules.json"), "utf8"));
@@ -102,6 +102,7 @@ mkdirSync(OUT, { recursive: true });
 const single = async (file: string) => ({ main: await render(() => import(`../app/${file}`)) });
 const each = async (file: string, slugs: string[]) => Object.fromEntries(await Promise.all(slugs.map(async (slug) => [slug, await render(() => import(`../app/${file}`), { slug })])));
 
+write("NoireWorkPage", await single("work/page.tsx"), "Work page");
 write("NoireAboutPage", await single("about/page.tsx"), "About page");
 write("NoireServicesPage", await single("services/page.tsx"), "Services page");
 write("NoireJournalPage", await single("journal/page.tsx"), "Journal index page");

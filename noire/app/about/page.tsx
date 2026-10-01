@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { NoireBlocks, NoireCTA, NoirePageHero } from "@/components/sections";
+import { NoireBlocks, NoireCTA, NoireMarquee, NoirePageHero } from "@/components/sections";
 import { site } from "@/content/site";
 import { clients, personalNotes, principles, timeline } from "@/content/studio";
-import { img } from "@/lib/view";
+import { hero, img } from "@/lib/view";
 
 export const metadata: Metadata = {
   title: "About",
@@ -13,7 +13,8 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <>
-      <NoirePageHero label={`About — ${site.founder}, founder`} title="A small studio for work" accent="made, not assembled." lede={`Founded in ${site.city} in 2021 after a decade designing exhibitions and books for cultural institutions.`} meta="" image={img("about-material")} imageRatio={2.4} dark={false} />
+      <NoirePageHero label={`About — ${site.founder}, founder`} title="A small studio for work" accent="made, not assembled." lede={`Founded in ${site.city} in 2021 after a decade designing exhibitions and books for cultural institutions.`} meta="" {...hero("hero-about")} />
+      <NoireMarquee items="Material first, Fewer decisions, Built to be used, Slow on purpose" speed={45} size={72} dark={false} italic />
       <NoireBlocks
         variant="split"
         label="Profile"

@@ -1,5 +1,6 @@
 // NOIRÉ 2 — Project detail (case study).
-// Title/meta → full-bleed hero with a scroll-linked crop → statement →
+// Cinematic full-height hero (title, thesis and meta over the image, which
+// settles 1.08 → 1 on scroll — the same language as Home) → statement →
 // visual sequence with changing scale and rhythm → details & outcome →
 // next project. One instance per project page; every field is editable.
 import { addPropertyControls, ControlType, useIsStaticRenderer } from "framer"
@@ -37,7 +38,7 @@ interface NoireProjectDetailProps {
 const SANS = '"Inter Tight", "Helvetica Neue", Arial, sans-serif'
 const SERIF = '"Instrument Serif", "Times New Roman", serif'
 const EASE = [0.16, 1, 0.3, 1] as const
-const IMG = "https://raw.githubusercontent.com/uxuimonir/2nd/83430dfd2a7c2050799516849c47d8f2be688dc7/noire/public/media/"
+const IMG = "https://raw.githubusercontent.com/uxuimonir/2nd/dfc52ae6763df67bd2e5dc8f8b76bac7d8ec60f1/noire/public/media/"
 
 const DEFAULT_GALLERY: Shot[] = [
     { image: { src: IMG + "p-quiet-matter-01.webp" }, caption: "Main hall, plinth heights set to the reading line.", layout: "full" },
@@ -97,14 +98,15 @@ export default function NoireProjectDetail(props: NoireProjectDetailProps) {
         style,
     } = props
     const root = useRef<HTMLDivElement>(null)
-    const heroRef = useRef<HTMLDivElement>(null)
+    const heroRef = useRef<HTMLElement>(null)
     const w = useWidth(root)
     const isStatic = useIsStaticRenderer()
     const reduce = Boolean(useReducedMotion() || isStatic)
     const compact = w < 900
     const pad = w < 600 ? 16 : w < 1200 ? 32 : 48
-    const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start end", "end start"] })
-    const heroY = useTransform(scrollYProgress, [0, 1], reduce ? ["0%", "0%"] : ["-8%", "8%"])
+    const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] })
+    const heroScale = useTransform(scrollYProgress, [0, 1], reduce ? [1, 1] : [1.08, 1])
+    const heroLift = useTransform(scrollYProgress, [0, 1], reduce ? [0, 0] : [0, -100])
     const muted = "#6D6A64"
     const line = "#D3CFC6"
 
@@ -151,35 +153,37 @@ export default function NoireProjectDetail(props: NoireProjectDetailProps) {
 
     return (
         <article ref={root} style={{ ...style, width: "100%", background: "#F5F2EC", color: "#11110F" }}>
-            <header style={{ padding: `${compact ? 130 : 180}px ${pad}px ${compact ? 40 : 64}px` }}>
-                <nav aria-label="Breadcrumb" style={{ display: "flex", gap: 10, marginBottom: 28, fontFamily: SANS, fontSize: 12, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", color: muted }}>
-                    <a href="/work" style={{ color: muted, textDecoration: "none" }}>Work</a>
-                    <span aria-hidden="true">/</span>
-                    <a href={`/work?category=${encodeURIComponent(category)}`} style={{ color: muted, textDecoration: "none" }}>{category}</a>
-                </nav>
-                <h1 style={{ margin: 0, fontFamily: SERIF, fontWeight: 400, fontSize: compact ? 64 : Math.min(176, w * 0.12), lineHeight: 0.9, letterSpacing: "-0.04em" }}>
-                    <span style={{ display: "block", overflow: "hidden", paddingBottom: "0.08em" }}>
-                        <motion.span style={{ display: "block" }} initial={reduce ? false : { y: "105%" }} animate={{ y: "0%" }} transition={{ duration: 1.1, ease: EASE }}>
-                            {title}
-                        </motion.span>
-                    </span>
-                </h1>
-                <div style={{ display: "grid", gridTemplateColumns: compact ? "1fr" : "minmax(0,1.2fr) minmax(0,2fr)", gap: compact ? 28 : 64, marginTop: compact ? 24 : 40, alignItems: "end" }}>
-                    <p style={{ margin: 0, maxWidth: 480, fontFamily: SANS, fontSize: compact ? 18 : 21, lineHeight: 1.5, color: muted }}>{thesis}</p>
-                    <dl style={{ display: "grid", gridTemplateColumns: compact ? "1fr 1fr" : "repeat(4, minmax(0,1fr))", gap: 16, margin: 0, paddingTop: 16, borderTop: `1px solid ${line}` }}>
-                        {meta.map(([k, v]) => (
-                            <div key={k}>
-                                <dt style={{ fontFamily: SANS, fontSize: 12, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", color: muted }}>{k}</dt>
-                                <dd style={{ margin: "6px 0 0", fontFamily: SANS, fontSize: 15 }}>{v}</dd>
-                            </div>
-                        ))}
-                    </dl>
-                </div>
+            <header ref={heroRef} style={{ position: "relative", minHeight: compact ? 680 : 820, height: compact ? "auto" : "94svh", maxHeight: 1080, overflow: "hidden", background: "#11110F", color: "#F7F5F0", display: "flex", flexDirection: "column", justifyContent: "flex-end" }}>
+                <motion.div style={{ position: "absolute", inset: 0, scale: heroScale, transformOrigin: "50% 40%" }}>
+                    <motion.img src={hero?.src} alt={hero?.alt ?? ""} initial={reduce ? false : { opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1.6, ease: EASE }} style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }} />
+                    <div aria-hidden="true" style={{ position: "absolute", inset: 0, background: "linear-gradient(180deg, rgba(17,17,15,0.62) 0%, rgba(17,17,15,0.12) 32%, rgba(17,17,15,0.3) 58%, rgba(17,17,15,0.94) 100%)" }} />
+                </motion.div>
+                <motion.div style={{ position: "relative", padding: `140px ${pad}px ${compact ? 32 : 48}px`, y: heroLift }}>
+                    <nav aria-label="Breadcrumb" style={{ display: "flex", gap: 10, marginBottom: 28, fontFamily: SANS, fontSize: 12, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(247,245,240,0.75)" }}>
+                        <a href="/work" style={{ color: "inherit", textDecoration: "none" }}>Work</a>
+                        <span aria-hidden="true">/</span>
+                        <a href={`/work?category=${encodeURIComponent(category)}`} style={{ color: "inherit", textDecoration: "none" }}>{category}</a>
+                    </nav>
+                    <h1 style={{ margin: 0, fontFamily: SERIF, fontWeight: 400, fontSize: compact ? 64 : Math.min(184, w * 0.125), lineHeight: 0.9, letterSpacing: "-0.04em" }}>
+                        <span style={{ display: "block", overflow: "hidden", paddingBottom: "0.08em" }}>
+                            <motion.span style={{ display: "block" }} initial={reduce ? false : { y: "105%" }} animate={{ y: "0%" }} transition={{ duration: 1.1, delay: 0.2, ease: EASE }}>
+                                {title}
+                            </motion.span>
+                        </span>
+                    </h1>
+                    <motion.div initial={reduce ? false : { opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.9, delay: 0.55, ease: EASE }} style={{ display: "grid", gridTemplateColumns: compact ? "1fr" : "minmax(0,1.2fr) minmax(0,2fr)", gap: compact ? 24 : 64, marginTop: compact ? 24 : 36, paddingTop: 24, borderTop: "1px solid rgba(247,245,240,0.22)", alignItems: "end" }}>
+                        <p style={{ margin: 0, maxWidth: 480, fontFamily: SANS, fontSize: compact ? 18 : 21, lineHeight: 1.5, color: "rgba(247,245,240,0.86)" }}>{thesis}</p>
+                        <dl style={{ display: "grid", gridTemplateColumns: compact ? "1fr 1fr" : "repeat(4, minmax(0,1fr))", gap: 16, margin: 0 }}>
+                            {meta.map(([k, v]) => (
+                                <div key={k}>
+                                    <dt style={{ fontFamily: SANS, fontSize: 12, fontWeight: 500, letterSpacing: "0.08em", textTransform: "uppercase", color: "rgba(247,245,240,0.6)" }}>{k}</dt>
+                                    <dd style={{ margin: "6px 0 0", fontFamily: SANS, fontSize: 15 }}>{v}</dd>
+                                </div>
+                            ))}
+                        </dl>
+                    </motion.div>
+                </motion.div>
             </header>
-
-            <div ref={heroRef} style={{ position: "relative", height: compact ? "62vw" : "min(86vh, 900px)", minHeight: 320, overflow: "hidden", margin: compact ? 0 : `0 ${pad}px`, borderRadius: compact ? 0 : 22, background: "#EAE6DE" }}>
-                <motion.img src={hero?.src} alt={hero?.alt ?? ""} style={{ position: "absolute", left: 0, width: "100%", height: "116%", top: "-8%", objectFit: "cover", y: heroY }} />
-            </div>
 
             <section aria-label="Statement" style={{ padding: `${compact ? 80 : 160}px ${pad}px` }}>
                 <div style={{ display: "grid", gridTemplateColumns: compact ? "1fr" : "minmax(0,1fr) minmax(0,2fr)", gap: compact ? 24 : 64 }}>

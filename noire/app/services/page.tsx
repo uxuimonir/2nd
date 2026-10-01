@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { NoireBlocks, NoireCTA, NoirePageHero, NoireProcessSection, NoireServices } from "@/components/sections";
+import { NoireBlocks, NoireCTA, NoireMarquee, NoirePageHero, NoireProcessSection, NoireServices } from "@/components/sections";
 import { site } from "@/content/site";
 import { engagementModels, faqs, processSteps, services } from "@/content/studio";
-import { img } from "@/lib/view";
+import { hero, img } from "@/lib/view";
 
 export const metadata: Metadata = {
   title: "Services",
@@ -13,7 +13,8 @@ export const metadata: Metadata = {
 export default function ServicesPage() {
   return (
     <>
-      <NoirePageHero label="Services" title="Six disciplines," accent="one way of working." lede="Most projects combine two or three of these. Every one of them starts with the material and ends in production." meta="" imageRatio={1.78} dark={false} />
+      <NoirePageHero label="Services" title="Six disciplines," accent="one way of working." lede="Most projects combine two or three of these. Every one of them starts with the material and ends in production." meta="" {...hero("hero-services")} />
+      <NoireMarquee items={services.map((s) => s.title).join(", ")} speed={40} size={72} dark={false} italic />
       <NoireServices
         label="In detail"
         heading="What we"

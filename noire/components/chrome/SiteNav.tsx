@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { NoireNav } from "@/components/sections";
 import { site } from "@/content/site";
 
-/** Fixed nav: transparent over the dark home hero, cream bar everywhere else. */
+/** Fixed nav: transparent over each page's dark cinematic hero, then a blurred cream bar. */
 export function SiteNav() {
   const pathname = usePathname();
   return (
@@ -17,7 +17,7 @@ export function SiteNav() {
         city={site.city}
         timeZone={site.timeZone}
         email={site.email}
-        overDark={pathname === "/"}
+        overDark
       />
     </div>
   );

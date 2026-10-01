@@ -16,7 +16,7 @@ interface NoireWorkArchiveProps {
 const SANS = '"Inter Tight", "Helvetica Neue", Arial, sans-serif'
 const SERIF = '"Instrument Serif", "Times New Roman", serif'
 const EASE = [0.22, 0.61, 0.36, 1] as const
-const IMG = "https://raw.githubusercontent.com/uxuimonir/2nd/83430dfd2a7c2050799516849c47d8f2be688dc7/noire/public/media/"
+const IMG = "https://raw.githubusercontent.com/uxuimonir/2nd/dfc52ae6763df67bd2e5dc8f8b76bac7d8ec60f1/noire/public/media/"
 
 const DEFAULT_PROJECTS: Project[] = [
     { title: "Quiet Matter", client: "Halde Kunsthalle", discipline: "Exhibition identity & catalogue", category: "Exhibition", year: "2026", link: "/work/quiet-matter", image: { src: IMG + "p-quiet-matter-hero.webp" } },

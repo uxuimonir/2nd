@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { NoireCTA, NoirePageHero, NoireWorkArchive } from "@/components/sections";
+import { NoireCTA, NoireMarquee, NoirePageHero, NoireWorkArchive } from "@/components/sections";
 import { site } from "@/content/site";
+import { clients } from "@/content/studio";
 import { getProjects } from "@/lib/cms";
-import { archiveProject } from "@/lib/view";
+import { archiveProject, hero } from "@/lib/view";
 
 export const metadata: Metadata = {
   title: "Work",
@@ -20,9 +21,9 @@ export default function WorkPage() {
         accent="2022 — 2026"
         lede="Identities, exhibitions, books, spaces and archives. Switch to the index for a faster, text-only view."
         meta=""
-        imageRatio={1.78}
-        dark={false}
+        {...hero("hero-work")}
       />
+      <NoireMarquee items={clients.join(", ")} speed={40} size={64} dark={false} italic />
       <NoireWorkArchive projects={projects.map(archiveProject)} />
       <NoireCTA eyebrow={site.availability.label} line1="Have something that should" accent="last?" email={site.email} buttonLabel="Start a project" buttonLink="/contact" />
     </>

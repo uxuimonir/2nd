@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { NoireContact, NoirePageHero } from "@/components/sections";
 import { budgetRanges, projectTypes, site } from "@/content/site";
-import { img } from "@/lib/view";
+import { hero, img } from "@/lib/view";
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 export default function ContactPage() {
   return (
     <>
-      <NoirePageHero label="Contact" title="Let’s talk about" accent="what you’re making." lede="A real person reads every message — usually the founder — and replies within two working days." meta="" imageRatio={1.78} dark={false} />
+      <NoirePageHero label="Contact" title="Let’s talk about" accent="what you’re making." lede="A real person reads every message — usually the founder — and replies within two working days." meta="" {...hero("hero-contact")} />
       <NoireContact
         endpoint="/api/contact"
         email={site.email}

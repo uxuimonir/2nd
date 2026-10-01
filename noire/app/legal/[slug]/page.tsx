@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { NoireArticle } from "@/components/sections";
 import { legalPages } from "@/content/studio";
 import { formatDate } from "@/lib/cms";
+import { img } from "@/lib/view";
 
 export const dynamicParams = false;
 
@@ -26,6 +27,7 @@ export default async function LegalPage({ params }: PageProps<"/legal/[slug]">) 
   return (
     <NoireArticle
       category="Legal"
+      cover={img(`hero-${page.slug}`)}
       title={page.title}
       date={`Updated ${formatDate(page.updated)}`}
       author=""
