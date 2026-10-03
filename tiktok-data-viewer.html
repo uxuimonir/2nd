@@ -92,6 +92,9 @@
     text-align: left;
   }
   .privacy b { color: var(--text); }
+  .home-search { display: flex; gap: 8px; margin-top: 16px; }
+  .home-search .input { flex: 1; min-width: 0; }
+  .home-search-hint { font-size: 11.5px; color: var(--muted); margin: 8px 2px 0; text-align: left; }
   .err {
     margin-top: 16px;
     color: #ff8a8a;
@@ -324,6 +327,12 @@
       <p>or click to choose — accepts <b>user_data.json</b> (or any .json / .txt from your export)</p>
       <input type="file" id="fileInput" accept=".json,.txt,application/json,text/plain" hidden />
     </div>
+
+    <div class="home-search">
+      <input class="input" id="homeSearch" type="search" placeholder="Search — link, @username or ID…" aria-label="Search your data" />
+      <button class="lookup-btn" id="homeSearchBtn">Search</button>
+    </div>
+    <p class="home-search-hint">Searches your <b>own</b> uploaded file. Type here, then choose your export — results open in Lookup.</p>
 
     <div class="err" id="err"></div>
 
@@ -997,9 +1006,24 @@ function handleFile(file) {
     renderVideos();
     renderActivityTabs();
     renderConvoList();
-    showSection("profile");
+    // If a search was started from the landing page, jump straight to results.
+    if (pendingLookup) {
+      $("#lookupInput").value = pendingLookup;
+      pendingLookup = null;
+      showSection("lookup");
+    } else {
+      showSection("profile");
+    }
   };
   reader.readAsText(file);
+}
+
+// A query typed on the landing page before a file is chosen; applied once
+// the file loads (we can only search data the user actually uploads).
+let pendingLookup = null;
+function startHomeSearch() {
+  pendingLookup = ($("#homeSearch").value || "").trim() || null;
+  $("#fileInput").click();
 }
 
 /* =========================================================================
@@ -1020,6 +1044,9 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#search").addEventListener("input", rerender);
   $("#dateFrom").addEventListener("change", rerender);
   $("#dateTo").addEventListener("change", rerender);
+
+  $("#homeSearchBtn").addEventListener("click", startHomeSearch);
+  $("#homeSearch").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); startHomeSearch(); } });
 
   $("#lookupBtn").addEventListener("click", renderLookup);
   $("#lookupInput").addEventListener("input", renderLookup);
