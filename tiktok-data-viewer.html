@@ -95,6 +95,7 @@
   .home-search { display: flex; gap: 8px; margin-top: 16px; }
   .home-search .input { flex: 1; min-width: 0; }
   .home-search-hint { font-size: 11.5px; color: var(--muted); margin: 8px 2px 0; text-align: left; }
+  .home-search-hint--active { color: var(--accent); font-weight: 600; }
   .err {
     margin-top: 16px;
     color: #ff8a8a;
@@ -329,10 +330,10 @@
     </div>
 
     <div class="home-search">
-      <input class="input" id="homeSearch" type="search" placeholder="Search — link, @username or ID…" aria-label="Search your data" />
+      <input class="input" id="homeSearch" type="search" placeholder="Search — word, @username, link or ID…" aria-label="Search your data" />
       <button class="lookup-btn" id="homeSearchBtn">Search</button>
     </div>
-    <p class="home-search-hint">Searches your <b>own</b> uploaded file. Type here, then choose your export — results open in Lookup.</p>
+    <p class="home-search-hint" id="homeSearchHint">This searches your <b>own</b> uploaded file. Upload your export first, then your search runs automatically.</p>
 
     <div class="err" id="err"></div>
 
@@ -1040,10 +1041,21 @@ function handleFile(file) {
 
 // A query typed on the landing page before a file is chosen; applied once
 // the file loads (we can only search data the user actually uploads).
+// We don't pop the file dialog on click — that confused people. Instead we
+// explain that the export must be chosen first, highlight the drop zone, and
+// remember the query so it runs automatically right after the file loads.
 let pendingLookup = null;
 function startHomeSearch() {
   pendingLookup = ($("#homeSearch").value || "").trim() || null;
-  $("#fileInput").click();
+  const hint = $("#homeSearchHint");
+  hint.classList.add("home-search-hint--active");
+  hint.innerHTML = pendingLookup
+    ? `⬆️ Choose your TikTok export file above first — then your search for “${esc(pendingLookup)}” runs automatically.`
+    : `⬆️ Choose your TikTok export file above first — then you can search inside it.`;
+  const dz = $("#dropzone");
+  dz.classList.add("drag");
+  setTimeout(() => dz.classList.remove("drag"), 1400);
+  dz.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 /* =========================================================================
@@ -1076,7 +1088,10 @@ document.addEventListener("DOMContentLoaded", () => {
     STATE.profile = {}; STATE.videos = []; STATE.activity = {}; STATE.conversations = []; STATE.me = "";
     $("#fileInput").value = "";
     $("#search").value = ""; $("#dateFrom").value = ""; $("#dateTo").value = "";
-    $("#homeSearch").value = "";
+    $("#homeSearch").value = ""; pendingLookup = null;
+    const hint = $("#homeSearchHint");
+    hint.classList.remove("home-search-hint--active");
+    hint.innerHTML = "This searches your <b>own</b> uploaded file. Upload your export first, then your search runs automatically.";
     $("#app").style.display = "none";
     $("#uploader").style.display = "flex";
     clearError();
