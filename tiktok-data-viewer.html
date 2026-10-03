@@ -357,7 +357,7 @@
       <button class="nav-btn" data-section="videos">🎬 <span>Videos</span> <span class="count" id="c-videos">0</span></button>
       <button class="nav-btn" data-section="activity">⚡ <span>Activity</span> <span class="count" id="c-activity">0</span></button>
       <button class="nav-btn" data-section="messages">💬 <span>Messages</span> <span class="count" id="c-messages">0</span></button>
-      <button class="nav-btn" data-section="lookup">🔍 <span>Lookup</span></button>
+      <button class="nav-btn" data-section="lookup">🔍 <span>Search</span></button>
       <div class="side-foot">
         <button class="btn-ghost" id="loadNew">↺ Load a different file</button>
       </div>
@@ -372,7 +372,7 @@
       <div class="topbar">
         <h2 class="page-title" id="pageTitle">Profile</h2>
         <div class="filters" id="filters" style="display:none">
-          <input class="input" id="search" type="search" placeholder="Search keyword…" />
+          <input class="input" id="search" type="search" placeholder="Search your data — word, @username, link or ID…" />
           <div class="date-group">
             <span>from</span>
             <input class="date-input" id="dateFrom" type="date" />
@@ -407,17 +407,13 @@
         </div>
       </section>
 
-      <!-- Lookup -->
+      <!-- Search results -->
       <section class="section" id="section-lookup">
         <p class="lookup-note">
-          Paste a TikTok <b>link</b>, <b>@username</b>, or <b>ID</b> to find it inside
-          <b>your own uploaded export</b> — matching videos, likes, comments, follows and messages.
+          Type anything in the <b>search bar above</b> — a word, caption, <b>@username</b>, link or ID —
+          to find it across your <b>own uploaded export</b> (videos, likes, comments, follows and messages).
           This only searches the file you loaded; it can't fetch anyone else's account data.
         </p>
-        <div class="lookup-bar">
-          <input class="input" id="lookupInput" type="search" placeholder="Paste a link, @username or ID…" />
-          <button class="lookup-btn" id="lookupBtn">Look up</button>
-        </div>
         <div id="lookupResults"></div>
       </section>
     </main>
@@ -858,10 +854,16 @@ function extractTokens(raw) {
   return Array.from(tokens).filter(Boolean);
 }
 
-function renderLookup() {
+// Global live search results, driven by the top search bar (+ date range).
+function renderResults() {
   const out = $("#lookupResults");
-  const raw = ($("#lookupInput").value || "").trim();
-  if (!raw) { out.innerHTML = ""; return; }
+  const raw = ($("#search").value || "").trim();
+  const { from, to } = currentFilter();
+  if (!raw) {
+    out.innerHTML = `<div class="empty">Type in the search bar above to find anything in your data —
+      a word, caption, @username, link or ID.</div>`;
+    return;
+  }
   const tokens = extractTokens(raw);
   const hit = s => { const t = String(s || "").toLowerCase(); return tokens.some(tok => tok && t.includes(tok)); };
 
@@ -875,7 +877,7 @@ function renderLookup() {
   }
 
   // Videos
-  const vids = STATE.videos.filter(v => hit(v.link) || hit(v.caption));
+  const vids = STATE.videos.filter(v => (hit(v.link) || hit(v.caption)) && matchDate(v.date, from, to));
   if (vids.length) {
     total += vids.length;
     html += `<div class="lookup-group-title">Videos (${vids.length})</div><div class="list">` +
@@ -885,7 +887,7 @@ function renderLookup() {
 
   // Activity groups
   for (const [g, arr] of Object.entries(STATE.activity)) {
-    const m = arr.filter(r => hit(r.text) || hit(r.link));
+    const m = arr.filter(r => (hit(r.text) || hit(r.link)) && matchDate(r.date, from, to));
     if (m.length) {
       total += m.length;
       html += `<div class="lookup-group-title">${esc(g)} (${m.length})</div><div class="list">` +
@@ -898,15 +900,18 @@ function renderLookup() {
   const blocks = [];
   STATE.conversations.forEach(c => {
     const nameHit = hit(c.name);
-    const msgs = c.messages.filter(m => hit(m.text) || hit(m.from));
-    if (nameHit && !msgs.length) { blocks.push({ name: c.name, whole: c.messages.length, msgs: [] }); total++; }
-    else if (msgs.length) { blocks.push({ name: c.name, whole: 0, msgs }); total += msgs.length; }
+    const msgs = c.messages.filter(m => (hit(m.text) || hit(m.from)) && matchDate(m.date, from, to));
+    if (msgs.length) { blocks.push({ name: c.name, whole: 0, msgs }); total += msgs.length; }
+    else if (nameHit) {
+      const inRange = c.messages.filter(m => matchDate(m.date, from, to));
+      blocks.push({ name: c.name, whole: inRange.length, msgs: [] }); total++;
+    }
   });
   if (blocks.length) {
     html += `<div class="lookup-group-title">Messages</div>`;
     blocks.forEach(b => {
       html += `<div class="card" style="margin-bottom:10px"><div class="meta">${esc(b.name)}</div>`;
-      if (b.whole) html += `<div class="body">Conversation with ${esc(b.name)} — ${b.whole} message${b.whole === 1 ? "" : "s"} (open Messages to read).</div>`;
+      if (b.msgs.length === 0) html += `<div class="body">Conversation with ${esc(b.name)} — ${b.whole} message${b.whole === 1 ? "" : "s"} (open Messages to read).</div>`;
       b.msgs.forEach(m =>
         html += `<div class="lookup-msg"><span class="who">${esc(m.me ? "You" : (m.from || b.name))} · ${esc(fmtDateTime(m.date))}</span><br>${linkify(m.text)}</div>`
       );
@@ -944,16 +949,17 @@ function matchDate(d, from, to) {
 
 /* ---------- Section switching ---------- */
 const SECTIONS = ["profile", "videos", "activity", "messages", "lookup"];
-const TITLES = { profile: "Profile", videos: "Videos", activity: "Activity", messages: "Messages", lookup: "Lookup" };
+const TITLES = { profile: "Profile", videos: "Videos", activity: "Activity", messages: "Messages", lookup: "Search results" };
 let current = "profile";
+let lastSection = "profile"; // where to return when the search box is cleared
 function showSection(name) {
+  if (name !== "lookup") lastSection = name;
   current = name;
   $all(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.section === name));
   SECTIONS.forEach(s => $("#section-" + s).classList.toggle("active", s === name));
   $("#pageTitle").textContent = TITLES[name];
-  // The keyword/date filter bar applies to videos, activity, messages —
-  // not profile (static) or lookup (has its own paste box).
-  $("#filters").style.display = (name === "profile" || name === "lookup") ? "none" : "flex";
+  // One global search bar, available on every page.
+  $("#filters").style.display = "flex";
   closeSidebar();
   rerender();
 }
@@ -961,8 +967,21 @@ function rerender() {
   if (current === "videos") renderVideos();
   else if (current === "activity") { renderActivityTabs(); renderActivityList(); }
   else if (current === "messages") renderConvoList();
-  else if (current === "lookup") renderLookup();
+  else if (current === "lookup") renderResults();
   else renderProfile();
+}
+// Typing in the top search bar turns the view into live global results;
+// clearing it returns to the page you were on.
+function onSearch() {
+  const q = ($("#search").value || "").trim();
+  if (q) {
+    if (current !== "lookup") showSection("lookup");
+    else renderResults();
+  } else if (current === "lookup") {
+    showSection(lastSection);
+  } else {
+    rerender(); // refresh current section so any leftover filtering clears
+  }
 }
 
 /* ---------- Sidebar (mobile) ---------- */
@@ -1008,9 +1027,10 @@ function handleFile(file) {
     renderConvoList();
     // If a search was started from the landing page, jump straight to results.
     if (pendingLookup) {
-      $("#lookupInput").value = pendingLookup;
+      $("#search").value = pendingLookup;
       pendingLookup = null;
-      showSection("lookup");
+      showSection("profile"); // sets lastSection, then onSearch switches to results
+      onSearch();
     } else {
       showSection("profile");
     }
@@ -1041,16 +1061,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   $all(".nav-btn").forEach(b => b.addEventListener("click", () => showSection(b.dataset.section)));
 
-  $("#search").addEventListener("input", rerender);
+  $("#search").addEventListener("input", onSearch);
   $("#dateFrom").addEventListener("change", rerender);
   $("#dateTo").addEventListener("change", rerender);
 
   $("#homeSearchBtn").addEventListener("click", startHomeSearch);
   $("#homeSearch").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); startHomeSearch(); } });
-
-  $("#lookupBtn").addEventListener("click", renderLookup);
-  $("#lookupInput").addEventListener("input", renderLookup);
-  $("#lookupInput").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); renderLookup(); } });
 
   $("#hamburger").addEventListener("click", openSidebar);
   $("#scrim").addEventListener("click", closeSidebar);
@@ -1059,6 +1075,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Wipe state and go back to uploader.
     STATE.profile = {}; STATE.videos = []; STATE.activity = {}; STATE.conversations = []; STATE.me = "";
     $("#fileInput").value = "";
+    $("#search").value = ""; $("#dateFrom").value = ""; $("#dateTo").value = "";
+    $("#homeSearch").value = "";
     $("#app").style.display = "none";
     $("#uploader").style.display = "flex";
     clearError();
