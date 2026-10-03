@@ -275,6 +275,19 @@
   .bubble .b-meta { font-size: 10.5px; opacity: .65; margin-top: 4px; }
   .day-sep { text-align: center; color: var(--muted); font-size: 11.5px; margin: 14px 0 8px; }
 
+  /* ---------- Lookup ---------- */
+  .lookup-note { color: var(--muted); font-size: 13.5px; margin: 0 0 16px; max-width: 660px; }
+  .lookup-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+  .lookup-bar .input { flex: 1; min-width: 240px; }
+  .lookup-btn {
+    background: var(--accent-2); color: #fff; border: none;
+    border-radius: 10px; padding: 9px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
+  }
+  .lookup-btn:hover { filter: brightness(1.05); }
+  .lookup-group-title { margin: 20px 0 8px; font-size: 15px; font-weight: 700; }
+  .lookup-msg { margin-top: 8px; font-size: 14px; }
+  .lookup-msg .who { color: var(--muted); font-size: 12px; }
+
   .mobile-top { display: none; }
   .hamburger { background: transparent; border: none; color: var(--text); font-size: 22px; cursor: pointer; }
   .scrim { display: none; }
@@ -335,6 +348,7 @@
       <button class="nav-btn" data-section="videos">🎬 <span>Videos</span> <span class="count" id="c-videos">0</span></button>
       <button class="nav-btn" data-section="activity">⚡ <span>Activity</span> <span class="count" id="c-activity">0</span></button>
       <button class="nav-btn" data-section="messages">💬 <span>Messages</span> <span class="count" id="c-messages">0</span></button>
+      <button class="nav-btn" data-section="lookup">🔍 <span>Lookup</span></button>
       <div class="side-foot">
         <button class="btn-ghost" id="loadNew">↺ Load a different file</button>
       </div>
@@ -382,6 +396,20 @@
           <div class="convo-list" id="convoList"></div>
           <div class="chat" id="chatView"><div class="empty">Select a conversation</div></div>
         </div>
+      </section>
+
+      <!-- Lookup -->
+      <section class="section" id="section-lookup">
+        <p class="lookup-note">
+          Paste a TikTok <b>link</b>, <b>@username</b>, or <b>ID</b> to find it inside
+          <b>your own uploaded export</b> — matching videos, likes, comments, follows and messages.
+          This only searches the file you loaded; it can't fetch anyone else's account data.
+        </p>
+        <div class="lookup-bar">
+          <input class="input" id="lookupInput" type="search" placeholder="Paste a link, @username or ID…" />
+          <button class="lookup-btn" id="lookupBtn">Look up</button>
+        </div>
+        <div id="lookupResults"></div>
       </section>
     </main>
   </div>
@@ -803,6 +831,87 @@ function renderChat() {
   view.innerHTML = html;
 }
 
+/* ---------- Lookup (paste a link / @username / ID) ---------- */
+// Pull useful search tokens out of whatever the user pastes: the raw text,
+// an @username, a username from a tiktok.com/@name URL, and any long numeric
+// id (TikTok video ids). All matching happens against the LOADED export only.
+function extractTokens(raw) {
+  const s = String(raw || "").trim();
+  if (!s) return [];
+  const tokens = new Set();
+  tokens.add(s.toLowerCase());
+  const at = s.match(/@([a-zA-Z0-9_.]+)/);
+  if (at) tokens.add(at[1].toLowerCase());
+  const urlName = s.match(/tiktok\.com\/@?([a-zA-Z0-9_.]+)/i);
+  if (urlName) tokens.add(urlName[1].toLowerCase());
+  const nums = s.match(/\d{6,}/g);
+  if (nums) nums.forEach(n => tokens.add(n));
+  return Array.from(tokens).filter(Boolean);
+}
+
+function renderLookup() {
+  const out = $("#lookupResults");
+  const raw = ($("#lookupInput").value || "").trim();
+  if (!raw) { out.innerHTML = ""; return; }
+  const tokens = extractTokens(raw);
+  const hit = s => { const t = String(s || "").toLowerCase(); return tokens.some(tok => tok && t.includes(tok)); };
+
+  let html = "";
+  let total = 0;
+
+  // Your own profile?
+  if (STATE.me && tokens.some(tok => STATE.me.toLowerCase().includes(tok))) {
+    total++;
+    html += `<div class="card"><div class="meta">Profile</div><div class="body">This matches <b>your own</b> account (${esc(STATE.me)}).</div></div>`;
+  }
+
+  // Videos
+  const vids = STATE.videos.filter(v => hit(v.link) || hit(v.caption));
+  if (vids.length) {
+    total += vids.length;
+    html += `<div class="lookup-group-title">Videos (${vids.length})</div><div class="list">` +
+      vids.map(v => `<div class="row"><span class="when">${esc(fmtDate(v.date))}</span><span class="what">${v.caption ? linkify(v.caption) : "(no caption)"}${v.link ? " · " + linkify(v.link) : ""}</span></div>`).join("") +
+      `</div>`;
+  }
+
+  // Activity groups
+  for (const [g, arr] of Object.entries(STATE.activity)) {
+    const m = arr.filter(r => hit(r.text) || hit(r.link));
+    if (m.length) {
+      total += m.length;
+      html += `<div class="lookup-group-title">${esc(g)} (${m.length})</div><div class="list">` +
+        m.map(r => `<div class="row"><span class="when">${esc(fmtDate(r.date))}</span><span class="what">${linkify(r.text)}</span></div>`).join("") +
+        `</div>`;
+    }
+  }
+
+  // Conversations: match by person name or message content.
+  const blocks = [];
+  STATE.conversations.forEach(c => {
+    const nameHit = hit(c.name);
+    const msgs = c.messages.filter(m => hit(m.text) || hit(m.from));
+    if (nameHit && !msgs.length) { blocks.push({ name: c.name, whole: c.messages.length, msgs: [] }); total++; }
+    else if (msgs.length) { blocks.push({ name: c.name, whole: 0, msgs }); total += msgs.length; }
+  });
+  if (blocks.length) {
+    html += `<div class="lookup-group-title">Messages</div>`;
+    blocks.forEach(b => {
+      html += `<div class="card" style="margin-bottom:10px"><div class="meta">${esc(b.name)}</div>`;
+      if (b.whole) html += `<div class="body">Conversation with ${esc(b.name)} — ${b.whole} message${b.whole === 1 ? "" : "s"} (open Messages to read).</div>`;
+      b.msgs.forEach(m =>
+        html += `<div class="lookup-msg"><span class="who">${esc(m.me ? "You" : (m.from || b.name))} · ${esc(fmtDateTime(m.date))}</span><br>${linkify(m.text)}</div>`
+      );
+      html += `</div>`;
+    });
+  }
+
+  if (!total) {
+    html = `<div class="empty">Nothing matching “${esc(raw)}” was found in your uploaded data.<br>
+      <span style="font-size:12.5px">This tool only searches the file you loaded — it can't access anyone else's account.</span></div>`;
+  }
+  out.innerHTML = html;
+}
+
 /* ---------- Filtering helpers ---------- */
 function currentFilter() {
   const q = ($("#search").value || "").trim().toLowerCase();
@@ -825,16 +934,17 @@ function matchDate(d, from, to) {
 }
 
 /* ---------- Section switching ---------- */
-const SECTIONS = ["profile", "videos", "activity", "messages"];
-const TITLES = { profile: "Profile", videos: "Videos", activity: "Activity", messages: "Messages" };
+const SECTIONS = ["profile", "videos", "activity", "messages", "lookup"];
+const TITLES = { profile: "Profile", videos: "Videos", activity: "Activity", messages: "Messages", lookup: "Lookup" };
 let current = "profile";
 function showSection(name) {
   current = name;
   $all(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.section === name));
   SECTIONS.forEach(s => $("#section-" + s).classList.toggle("active", s === name));
   $("#pageTitle").textContent = TITLES[name];
-  // Filters apply to videos, activity, messages (not profile).
-  $("#filters").style.display = name === "profile" ? "none" : "flex";
+  // The keyword/date filter bar applies to videos, activity, messages —
+  // not profile (static) or lookup (has its own paste box).
+  $("#filters").style.display = (name === "profile" || name === "lookup") ? "none" : "flex";
   closeSidebar();
   rerender();
 }
@@ -842,6 +952,7 @@ function rerender() {
   if (current === "videos") renderVideos();
   else if (current === "activity") { renderActivityTabs(); renderActivityList(); }
   else if (current === "messages") renderConvoList();
+  else if (current === "lookup") renderLookup();
   else renderProfile();
 }
 
@@ -909,6 +1020,10 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#search").addEventListener("input", rerender);
   $("#dateFrom").addEventListener("change", rerender);
   $("#dateTo").addEventListener("change", rerender);
+
+  $("#lookupBtn").addEventListener("click", renderLookup);
+  $("#lookupInput").addEventListener("input", renderLookup);
+  $("#lookupInput").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); renderLookup(); } });
 
   $("#hamburger").addEventListener("click", openSidebar);
   $("#scrim").addEventListener("click", closeSidebar);
