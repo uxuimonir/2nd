@@ -96,6 +96,21 @@
   .home-search .input { flex: 1; min-width: 0; }
   .home-search-hint { font-size: 11.5px; color: var(--muted); margin: 8px 2px 0; text-align: left; }
   .home-search-hint--active { color: var(--accent); font-weight: 600; }
+  .demo-row { margin-top: 16px; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+  .demo-btn {
+    background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
+    border-radius: 10px; padding: 9px 16px; font-size: 13.5px; font-weight: 600; cursor: pointer;
+  }
+  .demo-btn:hover { border-color: var(--accent); }
+  .demo-note { font-size: 11px; color: var(--muted); }
+  .demo-banner {
+    background: rgba(254,44,85,.12); border: 1px solid var(--accent-2); color: var(--text);
+    border-radius: 10px; padding: 10px 14px; font-size: 13px; margin-bottom: 16px;
+  }
+  .demo-banner button {
+    background: transparent; border: none; color: var(--accent-2); cursor: pointer;
+    font-weight: 700; font-size: 13px; padding: 0; text-decoration: underline;
+  }
   .err {
     margin-top: 16px;
     color: #ff8a8a;
@@ -335,6 +350,11 @@
     </div>
     <p class="home-search-hint" id="homeSearchHint">This searches your <b>own</b> uploaded file. Upload your export first, then your search runs automatically.</p>
 
+    <div class="demo-row">
+      <button class="demo-btn" id="demoBtn">Explore with sample data — no file needed</button>
+      <span class="demo-note">Loads example data (not a real account) so you can try the app without uploading.</span>
+    </div>
+
     <div class="err" id="err"></div>
 
     <div class="privacy">
@@ -368,6 +388,11 @@
       <div class="mobile-top">
         <button class="hamburger" id="hamburger" aria-label="Open menu">☰</button>
         <span class="t"><span style="color:var(--accent-2)">TikTok</span> Viewer</span>
+      </div>
+
+      <div class="demo-banner" id="demoBanner" style="display:none">
+        👀 You're viewing <b>sample demo data</b> — not a real account.
+        <button id="exitDemo">Upload your own file</button> to see your data.
       </div>
 
       <div class="topbar">
@@ -1018,7 +1043,9 @@ function handleFile(file) {
       showError("Something went wrong parsing the export: " + err.message);
       return;
     }
-    // Reveal app.
+    // Reveal app (real data — clear any demo state).
+    isDemo = false;
+    $("#demoBanner").style.display = "none";
     $("#uploader").style.display = "none";
     $("#app").style.display = "block";
     // Init all counts + default view.
@@ -1059,6 +1086,69 @@ function startHomeSearch() {
 }
 
 /* =========================================================================
+   DEMO MODE — makes uploading optional. Loads clearly-labelled sample data
+   (a fictional account, not anyone real) so the app can be explored with no
+   file. Real personal data still only ever comes from an uploaded export.
+   ========================================================================= */
+const DEMO_DATA = {
+  "Profile": { "Profile Information": { "ProfileMap": {
+    userName: "demo_user", bioDescription: "👋 This is sample demo data — not a real account",
+    likesReceived: 1234, birthDate: "2000-01-01"
+  } } },
+  "Video": { "Videos": { "VideoList": [
+    { Date: "2024-09-01 10:00:00", Link: "https://example.com/demo/video/1", Likes: 120, Title: "Sample video — morning routine ☀️" },
+    { Date: "2024-07-15 18:30:00", Link: "https://example.com/demo/video/2", Likes: 888, Title: "Sample video — coding setup 💻" },
+    { Date: "2024-05-20 12:00:00", Link: "https://example.com/demo/video/3", Likes: 45, Title: "" }
+  ] } },
+  "Activity": {
+    "Like List": { "ItemFavoriteList": [
+      { Date: "2024-09-10 09:00:00", Link: "https://example.com/demo/liked/1" },
+      { Date: "2024-08-22 20:00:00", Link: "https://example.com/demo/liked/2" }
+    ] },
+    "Following List": { "Following": [
+      { Date: "2024-02-01 10:00:00", UserName: "demo_friend_a" },
+      { Date: "2024-03-01 10:00:00", UserName: "demo_friend_b" }
+    ] },
+    "Follower List": { "FansList": [
+      { Date: "2024-04-01 10:00:00", UserName: "demo_fan_1" }
+    ] }
+  },
+  "Comment": { "Comments": { "CommentsList": [
+    { Date: "2024-09-02 09:30:00", Comment: "Sample comment — love this! 🔥" }
+  ] } },
+  "Direct Messages": { "Chat History": { "ChatHistory": {
+    "Chat History with demo_friend_a:": [
+      { Date: "2024-09-05 14:00:00", From: "demo_friend_a", Content: "hey! this is sample demo chat 👋" },
+      { Date: "2024-09-05 14:02:00", From: "demo_user", Content: "yep — just example data to try the viewer 🙂" }
+    ]
+  } } }
+};
+
+let isDemo = false;
+function loadDemo() {
+  try { parseExport(DEMO_DATA); } catch (e) { return; }
+  isDemo = true;
+  $("#demoBanner").style.display = "block";
+  $("#uploader").style.display = "none";
+  $("#app").style.display = "block";
+  renderProfile(); renderVideos(); renderActivityTabs(); renderConvoList();
+  showSection("profile");
+}
+function exitToUploader() {
+  STATE.profile = {}; STATE.videos = []; STATE.activity = {}; STATE.conversations = []; STATE.me = "";
+  isDemo = false;
+  $("#demoBanner").style.display = "none";
+  $("#fileInput").value = ""; $("#search").value = ""; $("#dateFrom").value = ""; $("#dateTo").value = "";
+  $("#homeSearch").value = ""; pendingLookup = null;
+  const hint = $("#homeSearchHint");
+  hint.classList.remove("home-search-hint--active");
+  hint.innerHTML = "This searches your <b>own</b> uploaded file. Upload your export first, then your search runs automatically.";
+  $("#app").style.display = "none";
+  $("#uploader").style.display = "flex";
+  clearError();
+}
+
+/* =========================================================================
    WIRING
    ========================================================================= */
 document.addEventListener("DOMContentLoaded", () => {
@@ -1080,21 +1170,14 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#homeSearchBtn").addEventListener("click", startHomeSearch);
   $("#homeSearch").addEventListener("keydown", e => { if (e.key === "Enter") { e.preventDefault(); startHomeSearch(); } });
 
+  $("#demoBtn").addEventListener("click", loadDemo);
+  $("#exitDemo").addEventListener("click", exitToUploader);
+
   $("#hamburger").addEventListener("click", openSidebar);
   $("#scrim").addEventListener("click", closeSidebar);
   $("#loadNew").addEventListener("click", () => {
     if (!confirm("Clear the current data and load a different file?")) return;
-    // Wipe state and go back to uploader.
-    STATE.profile = {}; STATE.videos = []; STATE.activity = {}; STATE.conversations = []; STATE.me = "";
-    $("#fileInput").value = "";
-    $("#search").value = ""; $("#dateFrom").value = ""; $("#dateTo").value = "";
-    $("#homeSearch").value = ""; pendingLookup = null;
-    const hint = $("#homeSearchHint");
-    hint.classList.remove("home-search-hint--active");
-    hint.innerHTML = "This searches your <b>own</b> uploaded file. Upload your export first, then your search runs automatically.";
-    $("#app").style.display = "none";
-    $("#uploader").style.display = "flex";
-    clearError();
+    exitToUploader();
   });
 });
 </script>
