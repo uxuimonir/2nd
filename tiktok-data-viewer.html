@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TikTok Data Viewer — Local & Private</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --panel: #171a21;
+    --panel-2: #1e222b;
+    --border: #2a2f3a;
+    --text: #e7eaf0;
+    --muted: #9aa3b2;
+    --accent: #25f4ee;
+    --accent-2: #fe2c55;
+    --bubble-me: #2b6ef0;
+    --bubble-them: #272c37;
+    --radius: 14px;
+    --shadow: 0 6px 24px rgba(0,0,0,.35);
+  }
+  @media (prefers-color-scheme: light) {
+    :root:not([data-theme="dark"]) {
+      --bg: #f4f6fa;
+      --panel: #ffffff;
+      --panel-2: #f0f2f7;
+      --border: #e2e6ee;
+      --text: #141821;
+      --muted: #5b6474;
+      --bubble-them: #eceef3;
+      --shadow: 0 6px 24px rgba(20,30,60,.08);
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.5;
+  }
+  a { color: var(--accent-2); }
+
+  /* ---------- Landing / uploader ---------- */
+  #uploader {
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px 16px;
+  }
+  .upload-card {
+    width: 100%;
+    max-width: 560px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    box-shadow: var(--shadow);
+    text-align: center;
+  }
+  .brand {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin: 0 0 4px;
+  }
+  .brand .tt { color: var(--accent-2); }
+  .sub { color: var(--muted); margin: 0 0 24px; font-size: 14px; }
+  .dropzone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 36px 20px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    background: var(--panel-2);
+  }
+  .dropzone.drag { border-color: var(--accent); background: rgba(37,244,238,.06); }
+  .dropzone h3 { margin: 10px 0 6px; font-size: 17px; }
+  .dropzone p { margin: 0; color: var(--muted); font-size: 13px; }
+  .dz-icon { font-size: 40px; }
+  .privacy {
+    margin-top: 20px;
+    font-size: 12.5px;
+    color: var(--muted);
+    background: var(--panel-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    text-align: left;
+  }
+  .privacy b { color: var(--text); }
+  .err {
+    margin-top: 16px;
+    color: #ff8a8a;
+    font-size: 13px;
+    display: none;
+    white-space: pre-wrap;
+  }
+  .hint { margin-top: 14px; font-size: 12px; color: var(--muted); }
+
+  /* ---------- App shell ---------- */
+  #app { display: none; min-height: 100dvh; }
+  .layout { display: flex; min-height: 100dvh; }
+
+  .sidebar {
+    width: 240px;
+    flex: 0 0 240px;
+    background: var(--panel);
+    border-right: 1px solid var(--border);
+    padding: 18px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    overflow-y: auto;
+  }
+  .side-brand { font-weight: 800; font-size: 18px; padding: 6px 10px 14px; }
+  .side-brand .tt { color: var(--accent-2); }
+  .nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14.5px;
+    font-weight: 500;
+  }
+  .nav-btn .count {
+    margin-left: auto;
+    font-size: 11.5px;
+    color: var(--muted);
+    background: var(--panel-2);
+    border-radius: 999px;
+    padding: 1px 8px;
+  }
+  .nav-btn:hover { background: var(--panel-2); }
+  .nav-btn.active { background: var(--accent-2); color: #fff; }
+  .nav-btn.active .count { color: #fff; background: rgba(255,255,255,.2); }
+  .side-foot { margin-top: auto; padding: 10px; }
+  .btn-ghost {
+    width: 100%;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 9px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .btn-ghost:hover { color: var(--text); }
+
+  .main { flex: 1 1 auto; min-width: 0; padding: 22px 26px 60px; max-width: 1100px; }
+  .topbar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 22px;
+  }
+  .page-title { font-size: 22px; font-weight: 800; margin: 0; letter-spacing: -0.02em; }
+
+  .filters { display: flex; gap: 10px; flex-wrap: wrap; margin-left: auto; align-items: center; }
+  .input, .date-input {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 10px;
+    padding: 9px 12px;
+    font-size: 13.5px;
+    outline: none;
+  }
+  .input { min-width: 200px; }
+  .input:focus, .date-input:focus { border-color: var(--accent); }
+  .date-group { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ---------- Cards / grids ---------- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px,1fr)); gap: 14px; }
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .card .meta { color: var(--muted); font-size: 12.5px; margin-bottom: 6px; }
+  .card .body { font-size: 14px; word-break: break-word; }
+  .card a { word-break: break-all; }
+
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 12px; margin-bottom: 22px; }
+  .stat { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+  .stat .n { font-size: 24px; font-weight: 800; }
+  .stat .l { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+
+  .profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap: 12px; }
+  .kv { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 14px; }
+  .kv .k { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .kv .v { font-size: 15px; margin-top: 4px; word-break: break-word; }
+
+  .subnav { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 18px; }
+  .chip {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 7px 13px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .chip.active { background: var(--panel-2); color: var(--text); border-color: var(--accent); }
+  .chip .c { opacity: .7; }
+
+  .list { display: flex; flex-direction: column; gap: 8px; }
+  .row {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 11px 14px;
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    font-size: 14px;
+  }
+  .row .when { color: var(--muted); font-size: 12px; flex: 0 0 auto; min-width: 140px; }
+  .row .what { word-break: break-word; }
+
+  .empty { color: var(--muted); padding: 40px 10px; text-align: center; font-size: 14px; }
+
+  /* ---------- Messages ---------- */
+  .msg-layout { display: grid; grid-template-columns: 260px 1fr; gap: 16px; }
+  .convo-list { display: flex; flex-direction: column; gap: 4px; max-height: 72dvh; overflow-y: auto; }
+  .convo-item {
+    text-align: left; width: 100%;
+    background: var(--panel); border: 1px solid var(--border);
+    border-radius: 10px; padding: 10px 12px; cursor: pointer;
+  }
+  .convo-item.active { border-color: var(--accent-2); }
+  .convo-item .name { font-weight: 600; font-size: 14px; word-break: break-word; }
+  .convo-item .preview { color: var(--muted); font-size: 12px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .convo-item .n { color: var(--muted); font-size: 11px; margin-top: 4px; }
+
+  .chat {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    max-height: 72dvh;
+    overflow-y: auto;
+  }
+  .chat-head { font-weight: 700; margin-bottom: 14px; position: sticky; top: -16px; background: var(--panel); padding: 6px 0; }
+  .bubble-wrap { display: flex; margin-bottom: 8px; }
+  .bubble-wrap.me { justify-content: flex-end; }
+  .bubble {
+    max-width: 72%;
+    padding: 9px 13px;
+    border-radius: 16px;
+    font-size: 14px;
+    word-break: break-word;
+    white-space: pre-wrap;
+  }
+  .bubble-wrap.them .bubble { background: var(--bubble-them); border-bottom-left-radius: 5px; }
+  .bubble-wrap.me .bubble { background: var(--bubble-me); color: #fff; border-bottom-right-radius: 5px; }
+  .bubble .b-meta { font-size: 10.5px; opacity: .65; margin-top: 4px; }
+  .day-sep { text-align: center; color: var(--muted); font-size: 11.5px; margin: 14px 0 8px; }
+
+  .mobile-top { display: none; }
+  .hamburger { background: transparent; border: none; color: var(--text); font-size: 22px; cursor: pointer; }
+  .scrim { display: none; }
+
+  @media (max-width: 860px) {
+    .sidebar {
+      position: fixed; z-index: 30; left: 0; top: 0; transform: translateX(-100%);
+      transition: transform .2s ease; box-shadow: var(--shadow);
+    }
+    .sidebar.open { transform: translateX(0); }
+    .scrim.show { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 20; }
+    .mobile-top { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .mobile-top .t { font-weight: 800; }
+    .main { padding: 16px; }
+    .filters { margin-left: 0; width: 100%; }
+    .input { min-width: 0; flex: 1; }
+    .msg-layout { grid-template-columns: 1fr; }
+    .convo-list { max-height: none; }
+    .chat { max-height: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ UPLOADER ============ -->
+<div id="uploader">
+  <div class="upload-card">
+    <h1 class="brand"><span class="tt">TikTok</span> Data Viewer</h1>
+    <p class="sub">Explore your own TikTok “Download your data” export — entirely on your device.</p>
+
+    <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Upload your TikTok data export JSON">
+      <div class="dz-icon">📁</div>
+      <h3>Drop your export file here</h3>
+      <p>or click to choose — accepts <b>user_data.json</b> (or any .json / .txt from your export)</p>
+      <input type="file" id="fileInput" accept=".json,.txt,application/json,text/plain" hidden />
+    </div>
+
+    <div class="err" id="err"></div>
+
+    <div class="privacy">
+      <b>🔒 100% private.</b> This page has no backend and makes no network requests. Your file is
+      read and parsed in your browser and never uploaded anywhere. Close the tab and it's gone.
+      <br><br>
+      It only shows what's inside <b>your own</b> export. It cannot access anyone else's account,
+      private or otherwise.
+    </div>
+    <p class="hint">Get your file from TikTok: <b>Profile → Settings → Account → Download your data</b> (choose <b>JSON</b>).</p>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app">
+  <div class="scrim" id="scrim"></div>
+  <div class="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="side-brand"><span class="tt">TikTok</span> Viewer</div>
+      <button class="nav-btn active" data-section="profile">👤 <span>Profile</span></button>
+      <button class="nav-btn" data-section="videos">🎬 <span>Videos</span> <span class="count" id="c-videos">0</span></button>
+      <button class="nav-btn" data-section="activity">⚡ <span>Activity</span> <span class="count" id="c-activity">0</span></button>
+      <button class="nav-btn" data-section="messages">💬 <span>Messages</span> <span class="count" id="c-messages">0</span></button>
+      <div class="side-foot">
+        <button class="btn-ghost" id="loadNew">↺ Load a different file</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="mobile-top">
+        <button class="hamburger" id="hamburger" aria-label="Open menu">☰</button>
+        <span class="t"><span style="color:var(--accent-2)">TikTok</span> Viewer</span>
+      </div>
+
+      <div class="topbar">
+        <h2 class="page-title" id="pageTitle">Profile</h2>
+        <div class="filters" id="filters" style="display:none">
+          <input class="input" id="search" type="search" placeholder="Search keyword…" />
+          <div class="date-group">
+            <span>from</span>
+            <input class="date-input" id="dateFrom" type="date" />
+            <span>to</span>
+            <input class="date-input" id="dateTo" type="date" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile -->
+      <section class="section active" id="section-profile">
+        <div class="stat-row" id="profileStats"></div>
+        <div class="profile-grid" id="profileGrid"></div>
+      </section>
+
+      <!-- Videos -->
+      <section class="section" id="section-videos">
+        <div class="grid" id="videosGrid"></div>
+      </section>
+
+      <!-- Activity -->
+      <section class="section" id="section-activity">
+        <div class="subnav" id="activityTabs"></div>
+        <div class="list" id="activityList"></div>
+      </section>
+
+      <!-- Messages -->
+      <section class="section" id="section-messages">
+        <div class="msg-layout">
+          <div class="convo-list" id="convoList"></div>
+          <div class="chat" id="chatView"><div class="empty">Select a conversation</div></div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* =========================================================================
+   Everything runs locally. No fetch, no XHR, no network. Pure in-browser.
+   ========================================================================= */
+
+/* ---------- Generic defensive helpers ---------- */
+
+// Case/space-insensitive deep search for an object value whose key loosely
+// matches one of the candidate names. Candidates are tried in priority order:
+// the whole tree is searched for the first candidate before moving to the
+// next, so a more-specific name wins over a shallow wrapper that happens to
+// sit higher in the tree.
+function findKey(obj, candidates, maxDepth) {
+  if (obj == null || typeof obj !== "object") return undefined;
+  maxDepth = maxDepth == null ? 8 : maxDepth;
+  const norm = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, "");
+  for (const cand of candidates) {
+    const want = norm(cand);
+    const queue = [{ node: obj, depth: 0 }];
+    while (queue.length) {
+      const { node, depth } = queue.shift();
+      if (node == null || typeof node !== "object") continue;
+      if (!Array.isArray(node)) {
+        for (const k of Object.keys(node)) if (norm(k) === want) return node[k];
+      }
+      if (depth < maxDepth) {
+        const vals = Array.isArray(node) ? node : Object.values(node);
+        for (const v of vals) if (v && typeof v === "object") queue.push({ node: v, depth: depth + 1 });
+      }
+    }
+  }
+  return undefined;
+}
+
+// Locate the direct-messages conversation map structurally, independent of how
+// deeply TikTok wraps it (Direct Messages → Chat History → ChatHistory → …).
+// We look for an object whose values are arrays of message-like records.
+function findConvoMap(root) {
+  // A DM record is identified by a content/text body or a sender field —
+  // deliberately NOT by date alone, since videos/likes/follows also carry dates.
+  const looksLikeMsg = m => m && typeof m === "object" && !Array.isArray(m) && (
+    pick(m, ["Content", "content", "text", "message", "Message"]) !== undefined ||
+    pick(m, ["From", "from", "sender"]) !== undefined
+  );
+  const isMsgArray = a => Array.isArray(a) && a.length > 0 && a.some(looksLikeMsg);
+  const queue = [{ node: root, depth: 0 }];
+  while (queue.length) {
+    const { node, depth } = queue.shift();
+    if (!node || typeof node !== "object") continue;
+    if (!Array.isArray(node)) {
+      const vals = Object.values(node);
+      if (vals.some(isMsgArray)) return node; // this object maps convo name -> messages
+    }
+    if (depth < 10) {
+      const vals = Array.isArray(node) ? node : Object.values(node);
+      for (const v of vals) if (v && typeof v === "object") queue.push({ node: v, depth: depth + 1 });
+    }
+  }
+  return null;
+}
+
+// Find the first array anywhere under a matched key.
+function findArray(obj, candidates) {
+  const v = findKey(obj, candidates);
+  if (Array.isArray(v)) return v;
+  if (v && typeof v === "object") {
+    const inner = Object.values(v).find(x => Array.isArray(x));
+    if (inner) return inner;
+  }
+  return [];
+}
+
+// Pull a field out of a record trying several possible names.
+function pick(rec, candidates, fallback) {
+  if (!rec || typeof rec !== "object") return fallback;
+  const norm = s => String(s).toLowerCase().replace(/[^a-z0-9]/g, "");
+  const wants = candidates.map(norm);
+  for (const k of Object.keys(rec)) if (wants.includes(norm(k))) {
+    const val = rec[k];
+    if (val !== "" && val != null) return val;
+  }
+  return fallback;
+}
+
+// Parse the many date shapes TikTok uses into a Date (or null).
+function parseDate(v) {
+  if (!v) return null;
+  if (typeof v === "number") {
+    const ms = v < 1e12 ? v * 1000 : v; // seconds vs ms
+    const d = new Date(ms);
+    return isNaN(d) ? null : d;
+  }
+  const s = String(v).trim();
+  // "2023-05-01 14:03:22" -> make ISO-ish
+  let d = new Date(s.replace(" ", "T"));
+  if (!isNaN(d)) return d;
+  d = new Date(s);
+  return isNaN(d) ? null : d;
+}
+
+function fmtDate(d) {
+  if (!d) return "Unknown date";
+  return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
+function fmtDateTime(d) {
+  if (!d) return "Unknown date";
+  return d.toLocaleString(undefined, { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+function esc(s) {
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+// Turn bare URLs in text into links (safe-escaped).
+function linkify(s) {
+  const e = esc(s);
+  return e.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+}
+
+/* ---------- App state ---------- */
+const STATE = {
+  profile: {},       // { label: value }
+  profileStats: [],  // [{n,l}]
+  videos: [],        // [{date, caption, link, extra}]
+  activity: {},      // { groupName: [{date, text, link}] }
+  conversations: [], // [{name, messages:[{date, from, text, me}]}]
+  me: "",            // my username (to detect "me" bubbles)
+};
+
+/* =========================================================================
+   PARSING
+   ========================================================================= */
+function parseExport(data) {
+  // ----- Profile -----
+  const pmap = findKey(data, ["ProfileMap", "Profile Information", "ProfileInfo"]) || {};
+  const prof = {};
+  const profileFieldDefs = [
+    ["userName", ["userName", "username", "Username"]],
+    ["name", ["name", "nickName", "nickname"]],
+    ["bioDescription", ["bioDescription", "bio", "description"]],
+    ["birthDate", ["birthDate", "birthday", "dateOfBirth"]],
+    ["emailAddress", ["emailAddress", "email"]],
+    ["telephoneNumber", ["telephoneNumber", "phone", "phoneNumber"]],
+    ["likesReceived", ["likesReceived", "likeReceived"]],
+    ["PlatformInfo", ["PlatformInfo", "platform"]],
+  ];
+  if (pmap && typeof pmap === "object") {
+    for (const [, cands] of profileFieldDefs) {
+      const val = pick(pmap, cands);
+      if (val != null && val !== "") {
+        // use the first candidate as display base, prettified
+        prof[cands[0]] = val;
+      }
+    }
+    // Also surface any other scalar fields present we didn't anticipate.
+    for (const [k, v] of Object.entries(pmap)) {
+      if (v != null && typeof v !== "object" && v !== "" && !(k in prof)) prof[k] = v;
+    }
+  }
+  STATE.profile = prof;
+  STATE.me = String(prof.userName || prof.name || "").trim();
+
+  // ----- Videos (posted) -----
+  let vlist = findArray(data, ["VideoList"]);
+  if (!vlist.length) vlist = findArray(data, ["PostList", "Posts"]);
+  STATE.videos = vlist.map(v => ({
+    date: parseDate(pick(v, ["Date", "date", "createTime", "time"])),
+    caption: pick(v, ["Title", "title", "caption", "Caption", "WhoCanView"], "") || "",
+    link: pick(v, ["Link", "link", "url", "VideoLink"], "") || "",
+    likes: pick(v, ["Likes", "likes", "likeCount"], null),
+    sound: pick(v, ["Sound", "sound", "AppVersion"], null),
+  })).filter(v => v.date || v.link || v.caption);
+
+  // ----- Activity groups -----
+  const activity = {};
+  const addGroup = (label, arr, mapper) => {
+    const mapped = (arr || []).map(mapper).filter(x => x && (x.date || x.text || x.link));
+    if (mapped.length) activity[label] = mapped;
+  };
+
+  addGroup("Likes", findArray(data, ["ItemFavoriteList", "LikeList", "Like List"]), r => ({
+    date: parseDate(pick(r, ["Date", "date"])),
+    text: pick(r, ["Link", "link", "VideoLink"], "Liked video"),
+    link: pick(r, ["Link", "link", "VideoLink"], ""),
+  }));
+
+  addGroup("Favorites", findArray(data, ["FavoriteVideoList", "FavoriteList", "Favorite Videos"]), r => ({
+    date: parseDate(pick(r, ["Date", "date"])),
+    text: pick(r, ["Link", "link"], "Favorited video"),
+    link: pick(r, ["Link", "link"], ""),
+  }));
+
+  addGroup("Comments", findArray(data, ["CommentsList", "Comments"]), r => ({
+    date: parseDate(pick(r, ["Date", "date"])),
+    text: pick(r, ["Comment", "comment", "text", "Content"], ""),
+    link: "",
+  }));
+
+  addGroup("Following", findArray(data, ["Following", "FollowingList", "Following List"]), r => ({
+    date: parseDate(pick(r, ["Date", "date"])),
+    text: pick(r, ["UserName", "userName", "Username", "name"], "") || "(unknown user)",
+    link: "",
+  }));
+
+  addGroup("Followers", findArray(data, ["FansList", "FollowerList", "Follower List", "Followers"]), r => ({
+    date: parseDate(pick(r, ["Date", "date"])),
+    text: pick(r, ["UserName", "userName", "Username", "name"], "") || "(unknown user)",
+    link: "",
+  }));
+
+  // Favorite effects / hashtags / sounds — surface if present.
+  addGroup("Favorite Sounds", findArray(data, ["FavoriteSoundList", "FavoriteSounds"]), r => ({
+    date: parseDate(pick(r, ["Date", "date"])),
+    text: pick(r, ["Link", "link", "SoundName"], ""),
+    link: pick(r, ["Link", "link"], ""),
+  }));
+  addGroup("Favorite Hashtags", findArray(data, ["FavoriteHashTagList", "FavoriteHashtags"]), r => ({
+    date: parseDate(pick(r, ["Date", "date"])),
+    text: pick(r, ["Link", "link", "HashTag", "hashtag"], ""),
+    link: pick(r, ["Link", "link"], ""),
+  }));
+
+  STATE.activity = activity;
+
+  // ----- Direct messages -----
+  // Shape: { "Chat History with X:": [ {Date, From, Content}, ... ], ... }
+  const chatHistory = findConvoMap(data);
+  const conversations = [];
+  if (chatHistory && typeof chatHistory === "object" && !Array.isArray(chatHistory)) {
+    for (const [convoKey, msgs] of Object.entries(chatHistory)) {
+      if (!Array.isArray(msgs)) continue;
+      // Derive a person name from "Chat History with NAME:" style keys.
+      let name = convoKey
+        .replace(/chat history with/i, "")
+        .replace(/:$/, "")
+        .trim();
+      if (!name) name = convoKey;
+      const messages = msgs.map(m => {
+        const from = String(pick(m, ["From", "from", "sender"], "") || "").trim();
+        return {
+          date: parseDate(pick(m, ["Date", "date", "timestamp", "time"])),
+          from: from,
+          text: pick(m, ["Content", "content", "text", "message", "Message"], ""),
+          me: STATE.me && from && from.toLowerCase() === STATE.me.toLowerCase(),
+        };
+      }).filter(m => m.text !== "" || m.date);
+      messages.sort((a, b) => (a.date ? a.date.getTime() : 0) - (b.date ? b.date.getTime() : 0));
+      if (messages.length) conversations.push({ name, messages });
+    }
+  }
+  conversations.sort((a, b) => {
+    const la = a.messages[a.messages.length - 1]?.date?.getTime() || 0;
+    const lb = b.messages[b.messages.length - 1]?.date?.getTime() || 0;
+    return lb - la;
+  });
+  STATE.conversations = conversations;
+
+  // ----- Profile stat tiles -----
+  const totalMsgs = conversations.reduce((s, c) => s + c.messages.length, 0);
+  STATE.profileStats = [
+    { n: STATE.videos.length, l: "Videos posted" },
+    { n: (activity["Following"] || []).length, l: "Following" },
+    { n: (activity["Followers"] || []).length, l: "Followers" },
+    { n: (activity["Likes"] || []).length, l: "Liked videos" },
+    { n: conversations.length, l: "Conversations" },
+    { n: totalMsgs, l: "Messages" },
+  ];
+}
+
+/* =========================================================================
+   RENDERING
+   ========================================================================= */
+const $ = sel => document.querySelector(sel);
+const $all = sel => Array.from(document.querySelectorAll(sel));
+
+function prettyLabel(key) {
+  return key
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, c => c.toUpperCase());
+}
+
+function renderProfile() {
+  const statsEl = $("#profileStats");
+  statsEl.innerHTML = STATE.profileStats
+    .map(s => `<div class="stat"><div class="n">${esc(s.n)}</div><div class="l">${esc(s.l)}</div></div>`)
+    .join("");
+
+  const grid = $("#profileGrid");
+  const entries = Object.entries(STATE.profile);
+  if (!entries.length) {
+    grid.innerHTML = `<div class="empty">No profile information found in this export.</div>`;
+    return;
+  }
+  grid.innerHTML = entries.map(([k, v]) =>
+    `<div class="kv"><div class="k">${esc(prettyLabel(k))}</div><div class="v">${linkify(v)}</div></div>`
+  ).join("");
+}
+
+function renderVideos() {
+  $("#c-videos").textContent = STATE.videos.length;
+  const grid = $("#videosGrid");
+  const { q, from, to } = currentFilter();
+  const rows = STATE.videos.filter(v => matchText(v.caption + " " + v.link, q) && matchDate(v.date, from, to));
+  if (!rows.length) {
+    grid.innerHTML = `<div class="empty">${STATE.videos.length ? "No videos match your filters." : "No posted videos found in this export."}</div>`;
+    return;
+  }
+  grid.innerHTML = rows.map(v => {
+    const extra = [];
+    if (v.likes != null) extra.push(`❤ ${esc(v.likes)}`);
+    return `<div class="card">
+      <div class="meta">${esc(fmtDateTime(v.date))}${extra.length ? " · " + extra.join(" · ") : ""}</div>
+      <div class="body">${v.caption ? linkify(v.caption) : '<em style="color:var(--muted)">No caption</em>'}</div>
+      ${v.link ? `<div class="body" style="margin-top:8px">${linkify(v.link)}</div>` : ""}
+    </div>`;
+  }).join("");
+}
+
+let activeActivityTab = null;
+function renderActivityTabs() {
+  const groups = Object.keys(STATE.activity);
+  const total = groups.reduce((s, g) => s + STATE.activity[g].length, 0);
+  $("#c-activity").textContent = total;
+  const tabs = $("#activityTabs");
+  if (!groups.length) { tabs.innerHTML = ""; return; }
+  if (!activeActivityTab || !groups.includes(activeActivityTab)) activeActivityTab = groups[0];
+  tabs.innerHTML = groups.map(g =>
+    `<button class="chip ${g === activeActivityTab ? "active" : ""}" data-tab="${esc(g)}">${esc(g)} <span class="c">${STATE.activity[g].length}</span></button>`
+  ).join("");
+  tabs.querySelectorAll(".chip").forEach(btn =>
+    btn.addEventListener("click", () => { activeActivityTab = btn.dataset.tab; renderActivityTabs(); renderActivityList(); })
+  );
+}
+function renderActivityList() {
+  const list = $("#activityList");
+  const group = STATE.activity[activeActivityTab] || [];
+  const { q, from, to } = currentFilter();
+  const rows = group.filter(r => matchText(r.text, q) && matchDate(r.date, from, to));
+  if (!rows.length) {
+    list.innerHTML = `<div class="empty">${group.length ? "Nothing matches your filters." : "No activity found in this export."}</div>`;
+    return;
+  }
+  // newest first
+  rows.sort((a, b) => (b.date ? b.date.getTime() : 0) - (a.date ? a.date.getTime() : 0));
+  list.innerHTML = rows.map(r =>
+    `<div class="row"><span class="when">${esc(fmtDateTime(r.date))}</span><span class="what">${linkify(r.text)}</span></div>`
+  ).join("");
+}
+
+let activeConvo = 0;
+function renderConvoList() {
+  const total = STATE.conversations.reduce((s, c) => s + c.messages.length, 0);
+  $("#c-messages").textContent = total;
+  const el = $("#convoList");
+  const { q, from, to } = currentFilter();
+
+  // A conversation shows if its name matches OR any message matches.
+  const visible = STATE.conversations
+    .map((c, i) => ({ c, i }))
+    .filter(({ c }) => {
+      if (matchText(c.name, q)) return true;
+      return c.messages.some(m => matchText(m.text, q) && matchDate(m.date, from, to));
+    });
+
+  if (!visible.length) {
+    el.innerHTML = `<div class="empty">${STATE.conversations.length ? "No conversations match." : "No messages found in this export."}</div>`;
+    $("#chatView").innerHTML = `<div class="empty">No conversation selected</div>`;
+    return;
+  }
+  if (!visible.some(v => v.i === activeConvo)) activeConvo = visible[0].i;
+
+  el.innerHTML = visible.map(({ c, i }) => {
+    const last = c.messages[c.messages.length - 1];
+    return `<button class="convo-item ${i === activeConvo ? "active" : ""}" data-i="${i}">
+      <div class="name">${esc(c.name)}</div>
+      <div class="preview">${esc((last?.text || "").slice(0, 60))}</div>
+      <div class="n">${c.messages.length} message${c.messages.length === 1 ? "" : "s"}</div>
+    </button>`;
+  }).join("");
+  el.querySelectorAll(".convo-item").forEach(btn =>
+    btn.addEventListener("click", () => { activeConvo = +btn.dataset.i; renderConvoList(); renderChat(); })
+  );
+  renderChat();
+}
+function renderChat() {
+  const view = $("#chatView");
+  const convo = STATE.conversations[activeConvo];
+  if (!convo) { view.innerHTML = `<div class="empty">No conversation selected</div>`; return; }
+  const { q, from, to } = currentFilter();
+
+  // If a keyword/date filter is active, only show matching messages; else all.
+  const filtering = q || from || to;
+  let msgs = convo.messages;
+  if (filtering) msgs = msgs.filter(m => matchText(m.text, q) && matchDate(m.date, from, to));
+
+  let html = `<div class="chat-head">${esc(convo.name)}</div>`;
+  if (!msgs.length) {
+    html += `<div class="empty">No messages match your filters in this conversation.</div>`;
+    view.innerHTML = html;
+    return;
+  }
+  let lastDay = "";
+  for (const m of msgs) {
+    const day = m.date ? m.date.toDateString() : "";
+    if (day && day !== lastDay) { html += `<div class="day-sep">${esc(fmtDate(m.date))}</div>`; lastDay = day; }
+    const side = m.me ? "me" : "them";
+    const who = m.me ? "You" : (m.from || convo.name);
+    const t = m.date ? m.date.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" }) : "";
+    html += `<div class="bubble-wrap ${side}"><div class="bubble">${linkify(m.text)}<div class="b-meta">${esc(who)}${t ? " · " + esc(t) : ""}</div></div></div>`;
+  }
+  view.innerHTML = html;
+}
+
+/* ---------- Filtering helpers ---------- */
+function currentFilter() {
+  const q = ($("#search").value || "").trim().toLowerCase();
+  const fromV = $("#dateFrom").value;
+  const toV = $("#dateTo").value;
+  const from = fromV ? new Date(fromV + "T00:00:00") : null;
+  const to = toV ? new Date(toV + "T23:59:59") : null;
+  return { q, from, to };
+}
+function matchText(text, q) {
+  if (!q) return true;
+  return String(text || "").toLowerCase().includes(q);
+}
+function matchDate(d, from, to) {
+  if (!from && !to) return true;
+  if (!d) return false;
+  if (from && d < from) return false;
+  if (to && d > to) return false;
+  return true;
+}
+
+/* ---------- Section switching ---------- */
+const SECTIONS = ["profile", "videos", "activity", "messages"];
+const TITLES = { profile: "Profile", videos: "Videos", activity: "Activity", messages: "Messages" };
+let current = "profile";
+function showSection(name) {
+  current = name;
+  $all(".nav-btn").forEach(b => b.classList.toggle("active", b.dataset.section === name));
+  SECTIONS.forEach(s => $("#section-" + s).classList.toggle("active", s === name));
+  $("#pageTitle").textContent = TITLES[name];
+  // Filters apply to videos, activity, messages (not profile).
+  $("#filters").style.display = name === "profile" ? "none" : "flex";
+  closeSidebar();
+  rerender();
+}
+function rerender() {
+  if (current === "videos") renderVideos();
+  else if (current === "activity") { renderActivityTabs(); renderActivityList(); }
+  else if (current === "messages") renderConvoList();
+  else renderProfile();
+}
+
+/* ---------- Sidebar (mobile) ---------- */
+function openSidebar() { $("#sidebar").classList.add("open"); $("#scrim").classList.add("show"); }
+function closeSidebar() { $("#sidebar").classList.remove("open"); $("#scrim").classList.remove("show"); }
+
+/* =========================================================================
+   FILE LOADING
+   ========================================================================= */
+function showError(msg) {
+  const e = $("#err");
+  e.textContent = msg;
+  e.style.display = "block";
+}
+function clearError() { const e = $("#err"); e.style.display = "none"; e.textContent = ""; }
+
+function handleFile(file) {
+  clearError();
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onerror = () => showError("Could not read that file. Please try again.");
+  reader.onload = () => {
+    let data;
+    try {
+      data = JSON.parse(reader.result);
+    } catch (err) {
+      showError("That file isn't valid JSON.\nMake sure you selected the JSON version of your TikTok export (user_data.json), not the HTML/TXT one.");
+      return;
+    }
+    try {
+      parseExport(data);
+    } catch (err) {
+      showError("Something went wrong parsing the export: " + err.message);
+      return;
+    }
+    // Reveal app.
+    $("#uploader").style.display = "none";
+    $("#app").style.display = "block";
+    // Init all counts + default view.
+    renderProfile();
+    renderVideos();
+    renderActivityTabs();
+    renderConvoList();
+    showSection("profile");
+  };
+  reader.readAsText(file);
+}
+
+/* =========================================================================
+   WIRING
+   ========================================================================= */
+document.addEventListener("DOMContentLoaded", () => {
+  const dz = $("#dropzone");
+  const input = $("#fileInput");
+  dz.addEventListener("click", () => input.click());
+  dz.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.click(); } });
+  input.addEventListener("change", e => handleFile(e.target.files[0]));
+  ["dragenter", "dragover"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.add("drag"); }));
+  ["dragleave", "drop"].forEach(ev => dz.addEventListener(ev, e => { e.preventDefault(); dz.classList.remove("drag"); }));
+  dz.addEventListener("drop", e => { if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]); });
+
+  $all(".nav-btn").forEach(b => b.addEventListener("click", () => showSection(b.dataset.section)));
+
+  $("#search").addEventListener("input", rerender);
+  $("#dateFrom").addEventListener("change", rerender);
+  $("#dateTo").addEventListener("change", rerender);
+
+  $("#hamburger").addEventListener("click", openSidebar);
+  $("#scrim").addEventListener("click", closeSidebar);
+  $("#loadNew").addEventListener("click", () => {
+    if (!confirm("Clear the current data and load a different file?")) return;
+    // Wipe state and go back to uploader.
+    STATE.profile = {}; STATE.videos = []; STATE.activity = {}; STATE.conversations = []; STATE.me = "";
+    $("#fileInput").value = "";
+    $("#app").style.display = "none";
+    $("#uploader").style.display = "flex";
+    clearError();
+  });
+});
+</script>
+</body>
+</html>
